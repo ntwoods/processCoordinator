@@ -99,7 +99,7 @@ const apiEndpoints = {
   dispatchFollowUp: 'https://script.google.com/macros/s/AKfycbwO1_MihNIerxTsnJQzuEnV2hf4UdaOzAwfDjtEXgQuxrJ499jCd3PB8_9j3kMeTdhX/exec',
   dispatchFollowUpADayBefore: 'https://script.google.com/macros/s/AKfycbynKuCKar5-CgsMfOBwCZm0swnfqxsWvKylbrj8QwLDoHlTNMSoCf1YowAVPAm1EHrOWQ/exec',  
   getDispatchDetails: 'https://script.google.com/macros/s/AKfycbwKB6wQPmrOXmMQ8bM43AMyWgtDobQJ96dPJXntgZpmyJRYogSz9qQHEqIn-OwBY67Qkw/exec',
-  holdOrderManagementDetails: 'https://script.google.com/macros/s/AKfycbxmknmN_A0jdyu8B489qcb1UfVSwyG7sGvRs3LPCj6647GyYU2oL0sIf7GaKuLodYfFeg/exec'
+  manageHoldPODetails: 'https://script.google.com/macros/s/AKfycbxmknmN_A0jdyu8B489qcb1UfVSwyG7sGvRs3LPCj6647GyYU2oL0sIf7GaKuLodYfFeg/exec'
 };
 
 async function fetchAndUpdateCount(url, countId, cardId) {

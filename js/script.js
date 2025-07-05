@@ -48,7 +48,7 @@ const apiMap = {
   dispatchFollowUpADayBefore: ['dispatchFollowUpADayBeforeCount', 'dispatchFollowUpADayBeforeCard'],  
   getDispatchDetails: ['getDispatchDetailsCount', 'getDispatchDetailsCard'],
   manageHoldPODetails: ['manageHoldPOCount', 'manageHoldPOCard'],
-  poPortals: ['poPortalCount', 'poPortal'],  
+  acPortals: ['acPortalCount', 'acPortal'],  
   receivedAtGodowns: ['receivedAtGodownCount', 'receivedAtGodown']
   
 };

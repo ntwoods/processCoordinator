@@ -103,7 +103,7 @@ const apiEndpoints = {
   dispatchFollowUpADayBefore: 'https://script.google.com/macros/s/AKfycbynKuCKar5-CgsMfOBwCZm0swnfqxsWvKylbrj8QwLDoHlTNMSoCf1YowAVPAm1EHrOWQ/exec',  
   getDispatchDetails: 'https://script.google.com/macros/s/AKfycbwKB6wQPmrOXmMQ8bM43AMyWgtDobQJ96dPJXntgZpmyJRYogSz9qQHEqIn-OwBY67Qkw/exec',
   manageHoldPODetails: 'https://script.google.com/macros/s/AKfycbxmknmN_A0jdyu8B489qcb1UfVSwyG7sGvRs3LPCj6647GyYU2oL0sIf7GaKuLodYfFeg/exec',
-  poPortals: 'https://script.google.com/macros/s/AKfycbwYVf_pKrNX6WWyYF6lBSwsQwB7AIZcgAjoXU1PBR4vmTeb48huKWtagXHJXiDcjeSibw/exec',
+  acPortals: 'https://script.google.com/macros/s/AKfycbwYVf_pKrNX6WWyYF6lBSwsQwB7AIZcgAjoXU1PBR4vmTeb48huKWtagXHJXiDcjeSibw/exec',
   receivedAtGodowns: 'https://script.google.com/macros/s/AKfycbx8G0LTKVI158PxrnxuHZsrWduM6tIverj2O-8cnp_hW_P_zXJ2nfr0uH6L882TyeSM/exec' 
 };
 

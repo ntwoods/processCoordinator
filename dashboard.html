@@ -280,6 +280,238 @@
           </div>
         </div>
       </section>
+  
+      <section class="section" id="sales-management">
+        <h2 class="section-title">📋 Sales Orders Management</h2>
+        <div class="dashboard-grid">
+          <div class="card loading" id="crmAssignCard" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L0.html?mode=view'">
+            <div class="card-icon">🎯</div>
+            <h3 class="card-title">CRM Not Assigned</h3>
+            <div class="card-count" id="crmAssignCount">Loading...</div>
+          </div>
+
+          <div class="card loading" id="ownersApprovalCard" onclick="location.href='https://ntwoods.github.io/ordertodispatch/OwnerApprovalSOview.html'">
+            <div class="card-icon">✅</div>
+            <h3 class="card-title">Owner's Approval</h3>
+            <div class="card-count" id="ownersApprovalCount">Loading...</div>
+          </div>
+
+          <div class="card loading" id="dispatchConfirmCard" onclick="location.href='https://ntwoods.github.io/ordertodispatch/DispatchTeam.html?mode=view'">
+            <div class="card-icon">🚛</div>
+            <h3 class="card-title">Dispatch Confirmation</h3>
+            <div class="card-count" id="dispatchConfirmCount">Loading...</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="crm-tasks">
+        <h2 class="section-title">👥 CRM Level Tasks</h2>
+        
+        <div class="crm-section collapsed" id="priyamCrmSection">
+          <div class="crm-section-header" onclick="toggleCrmSection('priyamCrmSection')">
+              <div class="crm-name">🙍‍♀️ Priyam Dixit</div>
+              <span class="toggle-icon">▼</span>
+          </div>
+          <div class="crm-grid">
+            <div class="card small loading" id="priyamLevel1Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L1.html?crm=Priyam%20Dixit&mode=view'">
+              <div class="card-icon">1️⃣</div>
+              <h3 class="card-title">Credit & Stock Check</h3>
+              <div class="card-count" id="priyamLevel1Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="priyamLevel2Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L2.html?crm=Priyam%20Dixit&mode=view'">
+              <div class="card-icon">2️⃣</div>
+              <h3 class="card-title">Dealer Call & Update</h3>
+              <div class="card-count" id="priyamLevel2Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="priyamLevel3Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L3.html?crm=Priyam%20Dixit&mode=view'">
+              <div class="card-icon">3️⃣</div>
+              <h3 class="card-title">Tentative Dispatch Date</h3>
+              <div class="card-count" id="priyamLevel3Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="priyamLevel4Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L4.html?crm=Priyam%20Dixit&mode=view'">
+              <div class="card-icon">4️⃣</div>
+              <h3 class="card-title">Dispatch Reminder</h3>
+              <div class="card-count" id="priyamLevel4Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="priyamLevel5Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L5.html?crm=Priyam%20Dixit&mode=view'">
+              <div class="card-icon">5️⃣</div>
+              <h3 class="card-title">Dispatch Info to Dealer</h3>
+              <div class="card-count" id="priyamLevel5Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="priyamLevel6Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L6.html?crm=Priyam%20Dixit&mode=view'">
+              <div class="card-icon">6️⃣</div>
+              <h3 class="card-title">Delivery Confirmation</h3>
+              <div class="card-count" id="priyamLevel6Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="priyamLevel7Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L7.html?crm=Priyam%20Dixit&mode=view'">
+              <div class="card-icon">7️⃣</div>
+              <h3 class="card-title">Hold Order Management</h3>
+              <div class="card-count" id="priyamLevel7Count">Loading...</div>
+            </div>
+            
+          </div>
+        </div>
+
+        <div class="crm-section collapsed" id="kalpanaCrmSection">
+          <div class="crm-section-header" onclick="toggleCrmSection('kalpanaCrmSection')">
+              <div class="crm-name">🙍‍♀️ Km Kalpana</div>
+              <span class="toggle-icon">▼</span>
+          </div>
+          <div class="crm-grid">
+            <div class="card small loading" id="kalpanaLevel1Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L1.html?crm=Km%20Kalpana&mode=view'">
+              <div class="card-icon">1️⃣</div>
+              <h3 class="card-title">Credit & Stock Check</h3>
+              <div class="card-count" id="kalpanaLevel1Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="kalpanaLevel2Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L2.html?crm=Km%20Kalpana&mode=view'">
+              <div class="card-icon">2️⃣</div>
+              <h3 class="card-title">Dealer Call & Update</h3>
+              <div class="card-count" id="kalpanaLevel2Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="kalpanaLevel3Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L3.html?crm=Km%20Kalpana&mode=view'">
+              <div class="card-icon">3️⃣</div>
+              <h3 class="card-title">Tentative Dispatch Date</h3>
+              <div class="card-count" id="kalpanaLevel3Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="kalpanaLevel4Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L4.html?crm=Km%20Kalpana&mode=view'">
+              <div class="card-icon">4️⃣</div>
+              <h3 class="card-title">Dispatch Reminder</h3>
+              <div class="card-count" id="kalpanaLevel4Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="kalpanaLevel5Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L5.html?crm=Km%20Kalpana&mode=view'">
+              <div class="card-icon">5️⃣</div>
+              <h3 class="card-title">Dispatch Info to Dealer</h3>
+              <div class="card-count" id="kalpanaLevel5Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="kalpanaLevel6Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L6.html?crm=Km%20Kalpana&mode=view'">
+              <div class="card-icon">6️⃣</div>
+              <h3 class="card-title">Delivery Confirmation</h3>
+              <div class="card-count" id="kalpanaLevel6Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="kalpanaLevel7Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L7.html?crm=Km%20Kalpana&mode=view'">
+              <div class="card-icon">7️⃣</div>
+              <h3 class="card-title">Hold Order Management</h3>
+              <div class="card-count" id="kalpanaLevel7Count">Loading...</div>
+            </div>
+            
+          </div>
+        </div>
+
+        <div class="crm-section collapsed" id="akanshaCrmSection">
+          <div class="crm-section-header" onclick="toggleCrmSection('akanshaCrmSection')">
+              <div class="crm-name">🙍‍♀️ Akansha Jain</div>
+              <span class="toggle-icon">▼</span>
+          </div>
+          <div class="crm-grid">
+            <div class="card small loading" id="akanshaLevel1Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L1.html?crm=Akansha%20Jain&mode=view'">
+              <div class="card-icon">1️⃣</div>
+              <h3 class="card-title">Credit & Stock Check</h3>
+              <div class="card-count" id="akanshaLevel1Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="akanshaLevel2Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L2.html?crm=Akansha%20Jain&mode=view'">
+              <div class="card-icon">2️⃣</div>
+              <h3 class="card-title">Dealer Call & Update</h3>
+              <div class="card-count" id="akanshaLevel2Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="akanshaLevel3Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L3.html?crm=Akansha%20Jain&mode=view'">
+              <div class="card-icon">3️⃣</div>
+              <h3 class="card-title">Tentative Dispatch Date</h3>
+              <div class="card-count" id="akanshaLevel3Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="akanshaLevel4Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L4.html?crm=Akansha%20Jain&mode=view'">
+              <div class="card-icon">4️⃣</div>
+              <h3 class="card-title">Dispatch Reminder</h3>
+              <div class="card-count" id="akanshaLevel4Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="akanshaLevel5Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L5.html?crm=Akansha%20Jain&mode=view'">
+              <div class="card-icon">5️⃣</div>
+              <h3 class="card-title">Dispatch Info to Dealer</h3>
+              <div class="card-count" id="akanshaLevel5Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="akanshaLevel6Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L6.html?crm=Akansha%20Jain&mode=view'">
+              <div class="card-icon">6️⃣</div>
+              <h3 class="card-title">Delivery Confirmation</h3>
+              <div class="card-count" id="akanshaLevel6Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="akanshaLevel7Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L7.html?crm=Akansha%20Jain&mode=view'">
+              <div class="card-icon">7️⃣</div>
+              <h3 class="card-title">Hold Order Management</h3>
+              <div class="card-count" id="akanshaLevel7Count">Loading...</div>
+            </div>
+            
+          </div>
+        </div>
+
+        <div class="crm-section collapsed" id="mahimaCrmSection">
+          <div class="crm-section-header" onclick="toggleCrmSection('mahimaCrmSection')">
+              <div class="crm-name">🙍‍♀️ Mahima Agarwal</div>
+              <span class="toggle-icon">▼</span>
+          </div>
+          <div class="crm-grid">
+            <div class="card small loading" id="mahimaLevel1Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L1.html?crm=Mahima%20Agarwal&mode=view'">
+              <div class="card-icon">1️⃣</div>
+              <h3 class="card-title">Credit & Stock Check</h3>
+              <div class="card-count" id="mahimaLevel1Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="mahimaLevel2Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L2.html?crm=Mahima%20Agarwal&mode=view'">
+              <div class="card-icon">2️⃣</div>
+              <h3 class="card-title">Dealer Call & Update</h3>
+              <div class="card-count" id="mahimaLevel2Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="mahimaLevel3Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L3.html?crm=Mahima%20Agarwal&mode=view'">
+              <div class="card-icon">3️⃣</div>
+              <h3 class="card-title">Tentative Dispatch Date</h3>
+              <div class="card-count" id="mahimaLevel3Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="mahimaLevel4Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L4.html?crm=Mahima%20Agarwal&mode=view'">
+              <div class="card-icon">4️⃣</div>
+              <h3 class="card-title">Dispatch Reminder</h3>
+              <div class="card-count" id="mahimaLevel4Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="mahimaLevel5Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L5.html?crm=Mahima%20Agarwal&mode=view'">
+              <div class="card-icon">5️⃣</div>
+              <h3 class="card-title">Dispatch Info to Dealer</h3>
+              <div class="card-count" id="mahimaLevel5Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="mahimaLevel6Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L6.html?crm=Mahima%20Agarwal&mode=view'">
+              <div class="card-icon">6️⃣</div>
+              <h3 class="card-title">Delivery Confirmation</h3>
+              <div class="card-count" id="mahimaLevel6Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="mahimaLevel7Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L7.html?crm=Mahima%20Agarwal&mode=view'">
+              <div class="card-icon">7️⃣</div>
+              <h3 class="card-title">Hold Order Management</h3>
+              <div class="card-count" id="mahimaLevel7Count">Loading...</div>
+            </div>
+
+            
+          </div>
+        </div>
+      </section>
 
       <section class="section" id="purchase-orders">
         <h2 class="section-title">💼 Purchase Orders Management</h2>

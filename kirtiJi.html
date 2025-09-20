@@ -6,172 +6,53 @@
   <title>NT Woods - PC Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="css/style.css" rel="stylesheet">
-  <style>
-    :root{
-      --bg: #f7fbff;
-      --card: #ffffff;
-      --blue-600:#2563eb;
-      --blue-700:#1d4ed8;
-      --blue-100:#dbeafe;
-      --blue-50:#eff6ff;
-      --text:#0f172a;
-      --muted:#475569;
-      --green:#16a34a;
-      --green-100:#dcfce7;
-      --red:#dc2626;
-      --red-100:#fee2e2;
-      --shadow: 0 10px 20px rgba(37,99,235,.08), 0 2px 6px rgba(15,23,42,.05);
-      --radius:18px;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      background: linear-gradient(180deg, var(--blue-50), var(--bg));
-      color:var(--text);
-      display:flex;
-      align-items:flex-start;
-      justify-content:center;
-      padding:24px;
-    }
-    .main-wrapper{
-      display:flex;
-      gap:16px;
-      width:100%;
-      max-width:1200px;
-    }
-    .sidebar{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      min-width:220px;
-    }
-    .sidebar-nav a{
-      display:block;
-      padding:10px 12px;
-      border-radius:10px;
-      background:var(--card);
-      box-shadow:var(--shadow);
-      font-weight:600;
-      color:var(--blue-700);
-      text-decoration:none;
-      transition:background .2s;
-    }
-    .sidebar-nav a:hover{background:var(--blue-50);}
-    .content-area{
-      flex:1;
-      display:flex;
-      flex-direction:column;
-      gap:20px;
-    }
-    .section-title{
-      font-weight:700;
-      color:var(--blue-700);
-      font-size:20px;
-      margin-bottom:10px;
-    }
-    .purchase-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(220px,1fr));
-      gap:12px;
-    }
-    .card{
-      background:var(--card);
-      border:1px solid var(--blue-100);
-      border-radius:var(--radius);
-      padding:16px;
-      box-shadow:var(--shadow);
-      cursor:pointer;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      transition:transform .15s;
-    }
-    .card:hover{transform:translateY(-2px);}
-    .card-icon{font-size:24px;margin-bottom:8px;}
-    .card-title{font-weight:700;color:var(--blue-700);}
-    .card-count{margin-top:6px;font-size:16px;font-weight:600;color:var(--muted);}
-    .title{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      font-weight:800;
-      font-size:20px;
-      color:var(--blue-700);
-    }
-    .title .dot{
-      width:10px;height:10px;border-radius:50%;background:var(--blue-600);
-      box-shadow:0 0 0 4px rgba(37,99,235,.15);
-    }
-    .controls{display:flex;gap:8px;align-items:center;}
-    button.icon{
-      appearance:none;
-      border:1px solid var(--blue-100);
-      background:var(--card);
-      padding:6px 10px;
-      border-radius:8px;
-      cursor:pointer;
-      box-shadow:var(--shadow);
-      font-weight:600;
-      color:var(--blue-700);
-    }
-    button.icon:hover{background:var(--blue-50);}
-    .timestamp{font-size:12px;color:var(--muted);}
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-      gap:16px;
-    }
-    .tile{
-      position:relative;
-      background:var(--card);
-      border:1px solid var(--blue-100);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      padding:20px 18px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      min-height:100px;
-      transition:transform .15s, box-shadow .15s;
-      cursor:pointer;
-    }
-    .tile:hover{transform:translateY(-2px);}
-    .tile .left{display:flex;flex-direction:column;gap:8px;}
-    .tile .label{font-weight:800;color:var(--blue-700);}
-    .tile .status{font-size:13px;font-weight:700;padding:4px 8px;border-radius:999px;
-      border:1px solid var(--blue-100);background:var(--blue-50);color:var(--muted);}
-    .count-badge{font-size:28px;font-weight:900;color:var(--blue-700);}
-    .tile.success{border-color:var(--green-100);background:linear-gradient(160deg,#fff,var(--green-100));}
-    .tile.success .status{background:var(--green-100);color:var(--green);}
-    .tile.danger{border-color:var(--red-100);background:linear-gradient(160deg,#fff,var(--red-100));}
-    .tile.danger .status{background:#fff;color:var(--red);}
-  </style>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-CF428LGWLQ"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
+  
     gtag('config', 'G-CF428LGWLQ');
-  </script>
+  </script>  
 </head>
 <body>
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">🌲 NT Woods</div>
+      <button class="theme-toggle" onclick="toggleDarkMode()">
+        🌓 Toggle Theme
+      </button>
+    </div>
+  </header>
+
   <div class="main-wrapper">
     <aside class="sidebar">
-      <nav class="sidebar-nav"><a onclick="location.href='https://lookerstudio.google.com/reporting/8ebc875e-3d84-40bc-b290-8c76ba47b33a'">☑️ CheckList</a></nav>
-      <nav class="sidebar-nav"><a onclick="location.href='https://ntwoods.github.io/PurchaseOrders/crmPurchaseReqView.html?mode=view'">👤 CRM Requests</a></nav>
-      <nav class="sidebar-nav"><a onclick="location.href='https://ntwoods.github.io/ordertodispatch/informOwnersClaimReq.html?mode=view'">Claim Requests</a></nav>
-      <nav class="sidebar-nav"><a onclick="location.href='https://ntwoods.github.io/ordertodispatch/raiseTicket.html'">🆘 Help Slip</a></nav>
-      <nav class="sidebar-nav"><a onclick="location.href='https://docs.google.com/spreadsheets/d/1UeohB4IPgEzGwybOJaIKpCIa38A4UvBstM8waqYv9V0/edit?gid=0#gid=0'">🧾 IMS NT Woods</a></nav>
-      <nav class="sidebar-nav"><a onclick="location.href='https://docs.google.com/spreadsheets/d/13tKeARKt4U1fteW6N31nRDfY3zWX4aEqnLrv-8eKpiE/edit?gid=0#gid=0'">🧾 IMS NexTree</a></nav>
-      <nav class="sidebar-nav"><a onclick="location.href='https://docs.google.com/spreadsheets/d/1Sfwb5OwFhpeHsenSyP5lhH-ykdvbj_PPFjDBe4yUibA/edit?gid=763969696#gid=763969696'">🧾 IMS Order Merging</a></nav>
+        <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://lookerstudio.google.com/reporting/8ebc875e-3d84-40bc-b290-8c76ba47b33a'" class="sidebar-btn">☑️ CheckList</a>                                             
+      </nav>     
+      <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://ntwoods.github.io/PurchaseOrders/crmPurchaseReqView.html?mode=view'" class="sidebar-btn">👤 CRM Requests</a>                                             
+      </nav>      
+      <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://ntwoods.github.io/ordertodispatch/informOwnersClaimReq.html?mode=view'" class="sidebar-btn">Claim Requests</a>                                             
+      </nav>                 
+      <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://ntwoods.github.io/ordertodispatch/raiseTicket.html'" class="sidebar-btn">🆘 Help Slip</a>                                             
+      </nav>            
+      <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://docs.google.com/spreadsheets/d/1UeohB4IPgEzGwybOJaIKpCIa38A4UvBstM8waqYv9V0/edit?gid=0#gid=0'" class="sidebar-btn">🧾 IMS NT Woods</a>                                             
+      </nav>      
+      <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://docs.google.com/spreadsheets/d/13tKeARKt4U1fteW6N31nRDfY3zWX4aEqnLrv-8eKpiE/edit?gid=0#gid=0'" class="sidebar-btn">🧾 IMS NexTree</a>                                             
+      </nav>            
+      <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://docs.google.com/spreadsheets/d/1Sfwb5OwFhpeHsenSyP5lhH-ykdvbj_PPFjDBe4yUibA/edit?gid=763969696#gid=763969696'" class="sidebar-btn">🧾 IMS Order Merging</a>                                             
+      </nav>           
+        
     </aside>
-
     <div class="content-area">
-
-<section class="section" id="purchase-orders">
+      <section class="section" id="purchase-orders">
         <h2 class="section-title">💼 Purchase Orders Management</h2>
         <div class="purchase-grid">
           <div class="card loading" id="purchaseVerifyCard" onclick="location.href='https://ntwoods.github.io/PurchaseOrders/POverifier.html?mode=view'">
@@ -235,92 +116,8 @@
           </div>
         </div>
       </section>
-      
-      <div class="title"><span class="dot"></span>Audit Control Panel</div>
-      <div class="controls">
-        <button class="icon" id="refreshBtn">⟲ Refresh</button>
-        <div class="timestamp" id="lastUpdated">—</div>
-      </div>
-      <section class="grid" id="tiles">
-        <article class="tile" id="tile-verify" data-href="https://ntwoods.github.io/audit/verifyJournalEntry">
-          <div class="left">
-            <div class="label">VERIFY JOURNAL ENTRIES</div>
-            <div class="status" id="status-verify">Loading…</div>
-          </div>
-          <div class="count-badge" id="count-verify">— <span class="suffix">pending</span></div>
-        </article>
-        <article class="tile" id="tile-start" data-href="https://ntwoods.github.io/audit/startAudit.html">
-          <div class="left">
-            <div class="label">START AUDIT</div>
-            <div class="status" id="status-start">Loading…</div>
-          </div>
-          <div class="count-badge" id="count-start">— <span class="suffix">pending</span></div>
-        </article>
-      </section>
     </div>
   </div>
-
-  <script>
-    (function(){
-      const ENDPOINTS = {
-        verify: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=journalentry",
-        start:  "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=pending"
-      };
-
-      const countVerify = document.getElementById("count-verify");
-      const countStart = document.getElementById("count-start");
-      const statusVerify = document.getElementById("status-verify");
-      const statusStart = document.getElementById("status-start");
-      const lastUpdated = document.getElementById("lastUpdated");
-
-      async function fetchCounts(){
-        try {
-          const [verifyData, startData] = await Promise.all([
-            fetchData(ENDPOINTS.verify),
-            fetchData(ENDPOINTS.start)
-          ]);
-          applyCount(countVerify, statusVerify, deriveVerifyCount(verifyData));
-          applyCount(countStart, statusStart, deriveStartCount(startData));
-          lastUpdated.textContent = "Updated: " + new Date().toLocaleString();
-        } catch(e){
-          console.error("Error loading counts", e);
-          statusVerify.textContent = "Error"; countVerify.textContent = "—";
-          statusStart.textContent = "Error"; countStart.textContent = "—";
-        }
-      }
-
-      async function fetchData(url){
-        const u = new URL(url); u.searchParams.set("_", Date.now());
-        const res = await fetch(u.toString());
-        if(!res.ok) return {data:[]};
-        return await res.json();
-      }
-
-      function deriveVerifyCount(payload){
-        const arr = (payload && payload.data) || [];
-        return arr.filter(x => !x.journalentryverificationtimestamp).length;
-      }
-
-      function deriveStartCount(payload){
-        const arr = (payload && payload.data) || [];
-        return arr.filter(x => String(x.status).toLowerCase()==="pending").length;
-      }
-
-      function applyCount(countEl, statusEl, count){
-        if(count>0){
-          statusEl.textContent="Pending";
-          countEl.innerHTML=`${count} <span class="suffix">pending</span>`;
-        } else {
-          statusEl.textContent="All Clear";
-          countEl.textContent="0";
-        }
-      }
-
-      document.getElementById("refreshBtn").addEventListener("click", fetchCounts);
-      // Initial load + refresh every 30 sec
-      fetchCounts();
-      setInterval(fetchCounts, 30000);
-    })();
-  </script>
+  <script src="js/script.js"></script>
 </body>
 </html>

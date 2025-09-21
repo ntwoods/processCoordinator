@@ -170,6 +170,11 @@
             <h3>VERIFY JOURNAL ENTRIES</h3>
             <div class="count" id="count-verify">Loading...</div>
           </div>
+          <div class="inventory-card" id="card-account" onclick="location.href='https://ntwoods.github.io/audit/tallyTask'">
+            <h3>ACCOUNT WORKING</h3>
+            <div class="count" id="count-account">Loading...</div>
+          </div>
+          
         </div>
       </section>
     </div>
@@ -184,7 +189,8 @@
         start:  "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=pending",
         verifyAudit: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=error",
         journal: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=verifyerror",
-        verify: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=journalentry"
+        verify: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=journalentry",
+        account: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=verifiedjournalentry"
       };
 
       async function fetchData(url){
@@ -208,17 +214,19 @@
       }
 
       async function loadCounts(){
-        const [startData, verifyAuditData, journalData, verifyData] = await Promise.all([
+        const [startData, verifyAuditData, journalData, verifyData, accountData] = await Promise.all([
           fetchData(endpoints.start),
           fetchData(endpoints.verifyAudit),
           fetchData(endpoints.journal),
-          fetchData(endpoints.verify)
+          fetchData(endpoints.verify),
+          fetchData(endpoints.account)
         ]);
 
         applyCount(document.getElementById("card-start"), (startData.data || []).length);
         applyCount(document.getElementById("card-verify-audit"), (verifyAuditData.data || []).length);
         applyCount(document.getElementById("card-journal"), (journalData.data || []).length);
         applyCount(document.getElementById("card-verify"), (verifyData.data || []).length);
+        applyCount(document.getElementById("card-account"), (accountData.data || []).length);
       }
 
       loadCounts();

@@ -416,6 +416,20 @@
           
         </div>
       </section>
+      <section class="section" id="inventory-audit">
+        <h2 class="section-title">🛄 Claim Management</h2>
+        <div class="inventory-grid">
+          <div class="inventory-card" id="card-crm" onclick="location.href='https://ntwoods.github.io/ordertodispatch/informOwnersClaimReq.html?mode=view'">
+            <h3>START AUDIT</h3>
+            <div class="count" id="count-crm">Loading...</div>
+          </div>
+
+          <div class="inventory-card" id="card-ac" onclick="location.href='https://ntwoods.github.io/ordertodispatch/claimRequestAtAccounts.html?mode=view'">
+            <h3>Claims at Accounts</h3>
+            <div class="count" id="count-ac">Loading...</div>
+          </div>          
+        </div>
+      </section>      
     </div>
   </div>
 
@@ -430,6 +444,8 @@
         journal: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=verifyerror",
         verify: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=journalentry",
         account: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=verifiedjournalentry"
+        crm: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=verifiedjournalentry"
+        ac: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=verifiedjournalentry"      
       };
 
       async function fetchData(url){
@@ -453,12 +469,14 @@
       }
 
       async function loadCounts(){
-        const [startData, verifyAuditData, journalData, verifyData, accountData] = await Promise.all([
+        const [startData, verifyAuditData, journalData, verifyData, accountData, crmData, accData] = await Promise.all([
           fetchData(endpoints.start),
           fetchData(endpoints.verifyAudit),
           fetchData(endpoints.journal),
           fetchData(endpoints.verify),
-          fetchData(endpoints.account)
+          fetchData(endpoints.account),
+          fetchData(endpoints.crm),
+          fetchData(endpoints.acc)                    
         ]);
 
         applyCount(document.getElementById("card-start"), (startData.data || []).length);
@@ -466,6 +484,8 @@
         applyCount(document.getElementById("card-journal"), (journalData.data || []).length);
         applyCount(document.getElementById("card-verify"), (verifyData.data || []).length);
         applyCount(document.getElementById("card-account"), (accountData.data || []).length);
+        applyCount(document.getElementById("card-crm"), (crmData.data || []).length);
+        applyCount(document.getElementById("card-acc"), (accData.data || []).length);        
       }
 
       loadCounts();

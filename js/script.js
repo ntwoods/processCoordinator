@@ -104,7 +104,9 @@ const apiEndpoints = {
   getDispatchDetails: 'https://script.google.com/macros/s/AKfycbwKB6wQPmrOXmMQ8bM43AMyWgtDobQJ96dPJXntgZpmyJRYogSz9qQHEqIn-OwBY67Qkw/exec',
   manageHoldPODetails: 'https://script.google.com/macros/s/AKfycbwD-4QVS1VD8Ba-M03Aj_LVKDXwMtqQYlzMVkMERCgUY2-XXalafa1oTJlafsLHBm-joQ/exec',
   acPortals: 'https://script.google.com/macros/s/AKfycbwYVf_pKrNX6WWyYF6lBSwsQwB7AIZcgAjoXU1PBR4vmTeb48huKWtagXHJXiDcjeSibw/exec',
-  receivedAtGodowns: 'https://script.google.com/macros/s/AKfycbx8G0LTKVI158PxrnxuHZsrWduM6tIverj2O-8cnp_hW_P_zXJ2nfr0uH6L882TyeSM/exec' 
+  receivedAtGodowns: 'https://script.google.com/macros/s/AKfycbx8G0LTKVI158PxrnxuHZsrWduM6tIverj2O-8cnp_hW_P_zXJ2nfr0uH6L882TyeSM/exec',
+  crmClaimRequests: 'https://script.google.com/macros/s/AKfycbw8K5xr1V52_zKMfy9gJyWZE0kuxsu0Gjoo2bdNfIXz9-zDDxFCHp2i4mdrLDZxs-BFbA/exec',
+  acClaimRequests: 'https://script.google.com/macros/s/AKfycbz0AMQP0qbmcpDl85pjfhF-0B1PW1GxQz_qRJj0ShDS0Pf4-CgVjslrY8CFmfX_hbzdeg/exec',
 };
 
 async function fetchAndUpdateCount(url, countId, cardId) {

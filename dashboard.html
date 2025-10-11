@@ -436,60 +436,87 @@
   <script src="js/script.js"></script>
 
   <!-- Inline JS for Inventory Audit Section -->
-  <script>
-    (function(){
-      const endpoints = {
-        start:  "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=pending",
-        verifyAudit: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=error",
-        journal: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=verifyerror",
-        verify: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=journalentry",
-        account: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=verifiedjournalentry",
-        crm: 'https://script.google.com/macros/s/AKfycbw8K5xr1V52_zKMfy9gJyWZE0kuxsu0Gjoo2bdNfIXz9-zDDxFCHp2i4mdrLDZxs-BFbA/exec',
-        acc: 'https://script.google.com/macros/s/AKfycbz0AMQP0qbmcpDl85pjfhF-0B1PW1GxQz_qRJj0ShDS0Pf4-CgVjslrY8CFmfX_hbzdeg/exec',
-      };
+<script>
+  (function(){
+    const endpoints = {
+      start:  "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=pending",
+      verifyAudit: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=error",
+      journal: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=verifyerror",
+      verify: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=journalentry",
+      account: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=verifiedjournalentry",
+      crm: 'https://script.google.com/macros/s/AKfycbw8K5xr1V52_zKMfy9gJyWZE0kuxsu0Gjoo2bdNfIXz9-zDDxFCHp2i4mdrLDZxs-BFbA/exec',
+      acc: 'https://script.google.com/macros/s/AKfycbz0AMQP0qbmcpDl85pjfhF-0B1PW1GxQz_qRJj0ShDS0Pf4-CgVjslrY8CFmfX_hbzdeg/exec',
+    };
 
-      async function fetchData(url){
-        const u = new URL(url);
-        u.searchParams.set("_", Date.now());
+    async function fetchData(url){
+      const u = new URL(url);
+      u.searchParams.set("_", Date.now()); // no-cache
+      try {
         const res = await fetch(u);
-        if(!res.ok) return { data: [] };
+        if (!res.ok) return [];
         const json = await res.json();
-        return json.success === true ? json : { data: [] };
-      }
 
-      function applyCount(el, count){
-        el.classList.remove("red","green","pulse");
-        if(count > 0){
-          el.classList.add("red","pulse");
-          el.querySelector(".count").textContent = count + " pending";
-        } else {
-          el.classList.add("green");
-          el.querySelector(".count").textContent = "All Clear";
-        }
+        // Accept any of these shapes: {success:true,data:[...]}, {data:[...]}, or just [...]
+        if (Array.isArray(json)) return json;
+        if (json && Array.isArray(json.data)) return json.data;
+        if (json && json.success === true && Array.isArray(json.records)) return json.records;
+        return [];
+      } catch {
+        return [];
       }
+    }
 
-      async function loadCounts(){
-        const [startData, verifyAuditData, journalData, verifyData, accountData, crmData, accData] = await Promise.all([
+    function applyCount(el, count){
+      if (!el) return; // guard against missing tiles
+      el.classList.remove("red","green","pulse");
+      const countEl = el.querySelector(".count");
+      if (!countEl) return;
+
+      if (count > 0){
+        el.classList.add("red","pulse");
+        countEl.textContent = count + " pending";
+      } else {
+        el.classList.add("green");
+        countEl.textContent = "All Clear";
+      }
+    }
+
+    async function loadCounts(){
+      try {
+        const [
+          startArr, verifyAuditArr, journalArr, verifyArr, accountArr, crmArr, accArr
+        ] = await Promise.all([
           fetchData(endpoints.start),
           fetchData(endpoints.verifyAudit),
           fetchData(endpoints.journal),
           fetchData(endpoints.verify),
           fetchData(endpoints.account),
           fetchData(endpoints.crm),
-          fetchData(endpoints.acc)                    
+          fetchData(endpoints.acc)
         ]);
 
-        applyCount(document.getElementById("card-start"), (startData.data || []).length);
-        applyCount(document.getElementById("card-verify-audit"), (verifyAuditData.data || []).length);
-        applyCount(document.getElementById("card-journal"), (journalData.data || []).length);
-        applyCount(document.getElementById("card-verify"), (verifyData.data || []).length);
-        applyCount(document.getElementById("card-account"), (accountData.data || []).length);
-        applyCount(document.getElementById("card-crm"), (crmData.data || []).length);
-        applyCount(document.getElementById("card-acc"), (accData.data || []).length);        
+        applyCount(document.getElementById("card-start"), startArr.length);
+        applyCount(document.getElementById("card-verify-audit"), verifyAuditArr.length);
+        applyCount(document.getElementById("card-journal"), journalArr.length);
+        applyCount(document.getElementById("card-verify"), verifyArr.length);
+        applyCount(document.getElementById("card-account"), accountArr.length);
+        applyCount(document.getElementById("card-crm"), crmArr.length);   // ← Claim tile #1
+        applyCount(document.getElementById("card-acc"), accArr.length);   // ← Claim tile #2
+      } catch (e){
+        // Optional: show a soft error state instead of crashing
+        ["card-start","card-verify-audit","card-journal","card-verify","card-account","card-crm","card-acc"]
+          .forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove("red","green","pulse");
+            const countEl = el.querySelector(".count");
+            if (countEl) countEl.textContent = "Error";
+          });
       }
+    }
 
-      loadCounts();
-    })();
-  </script>
+    loadCounts();
+  })();
+</script>
 </body>
 </html>

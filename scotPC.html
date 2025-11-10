@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SCOT Follow-ups — Weekly Window</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#f7fbff;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#475569;
+      --blue:#2563eb;
+      --blue-100:#dbeafe;
+      --blue-700:#1d4ed8;
+      --border:#e5e7eb;
+      --chip:#eef2ff;
+      --green:#16a34a;
+      --red:#dc2626;
+      --amber:#f59e0b;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial;
+      background: var(--bg); color: var(--text);
+    }
+    .container{ max-width:1100px; margin: 40px auto; padding: 0 16px; }
+
+    .heading{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:16px; }
+    .heading h1{ font-size:22px; margin:0; font-weight:700; color:#0b1220; }
+    .sub{ color: var(--muted); font-size:14px; }
+
+    .card{
+      background: var(--card);
+      border:1px solid var(--border);
+      border-radius:16px;
+      box-shadow: 0 4px 14px rgba(2,18,44,0.06);
+      padding:16px;
+    }
+
+    .filters{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px; }
+    @media (min-width:720px){ .filters{ grid-template-columns: 220px 1fr 160px; } }
+
+    .input, select{
+      width:100%;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      border-radius:10px;
+      background:#fff; color: var(--text);
+      font-size:14px;
+      outline:none;
+    }
+    .input:focus, select:focus{ border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-100); }
+
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      background: var(--blue); color:#fff; border:none; border-radius:10px;
+      padding:10px 14px; font-weight:600; cursor:pointer;
+    }
+    .btn:hover{ background: var(--blue-700); }
+
+    table{
+      width:100%; border-collapse: collapse; overflow:hidden;
+    }
+    thead th{
+      text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:0.02em;
+      color:#334155; border-bottom:1px solid var(--border); padding:10px;
+      background:#f8fafc;
+    }
+    tbody td{
+      padding:12px 10px; border-bottom:1px solid var(--border); vertical-align:top;
+    }
+
+    .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      background: var(--chip); color:#312e81;
+      padding:6px 10px; border-radius:999px; font-size:12px; font-weight:600;
+      border:1px solid #e0e7ff;
+    }
+    .swatch{
+      width:10px; height:10px; border-radius:999px; border:1px solid rgba(0,0,0,0.1);
+      display:inline-block;
+    }
+    .dates{ display:flex; flex-wrap:wrap; gap:6px; }
+    .datechip{
+      border:1px solid var(--border); border-radius:8px; padding:4px 8px; font-size:12px; background:#fff;
+    }
+
+    .empty{
+      text-align:center; color:var(--muted); padding:24px 8px; font-size:14px;
+    }
+
+    .footer{
+      display:flex; justify-content:space-between; align-items:center; margin-top:10px; color:var(--muted); font-size:12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="heading">
+      <div>
+        <h1>Weekly Active Follow-ups</h1>
+        <div class="sub" id="subtitle">Loading…</div>
+      </div>
+      <button class="btn" id="btnRefresh">Refresh</button>
+    </div>
+
+    <div class="card">
+      <div class="filters">
+        <select id="scFilter">
+          <option value="">All Sales Coordinators</option>
+          <option value="crm01@ntwoods.com">Km Kalpana</option>
+          <option value="crm02@ntwoods.com">Priyam Dixit</option>
+          <option value="crm03@ntwoods.com">Akansha Jain</option>
+          <option value="crm04@ntwoods.com">Mahima Agarwal</option>
+          <option value="__unknown">Unknown</option>
+        </select>
+
+        <input id="clientSearch" class="input" placeholder="Search Client..." />
+
+        <select id="colorFilter" style="display:none;">
+          <option value="">All Colors</option>
+          <!-- optional future: fill unique colors -->
+        </select>
+      </div>
+
+      <div style="overflow:auto;">
+        <table id="tbl">
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Sales Coordinator</th>
+              <th>Client Color</th>
+              <th>Due Follow-up Dates (This Window)</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td class="empty" colspan="4">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="footer">
+        <div>Tip: Filters are client-side; “Refresh” refetches live data.</div>
+        <div id="countInfo"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ====== CONFIG ======
+    const API_URL = 'https://script.google.com/macros/s/AKfycby_3lmoJG9vnc-FeeuDuOEli5cL1VchbmVj8yjcF8ECwA-MwczLB5vbWzZb-2BzEU8/exec'; // <-- replace with your deployed URL
+
+    // Email -> Display Name mapping
+    const SC_NAME = {
+      'crm01@ntwoods.com': 'Km Kalpana',
+      'crm02@ntwoods.com': 'Priyam Dixit',
+      'crm03@ntwoods.com': 'Akansha Jain',
+      'crm04@ntwoods.com': 'Mahima Agarwal'
+    };
+    function scDisplay(email){
+      return SC_NAME[email?.toLowerCase?.()] || 'Unknown';
+    }
+
+    // ====== State ======
+    let RAW = [];         // full dataset from API
+    let FILTERED = [];    // after filters
+    let TODAY = null;
+
+    const elSub = document.getElementById('subtitle');
+    const elBody = document.getElementById('tbody');
+    const elCount = document.getElementById('countInfo');
+    const elSc = document.getElementById('scFilter');
+    const elSearch = document.getElementById('clientSearch');
+    const elRefresh = document.getElementById('btnRefresh');
+
+    // ====== Fetch ======
+    async function fetchData(){
+      try{
+        elSub.textContent = 'Loading…';
+        elBody.innerHTML = `<tr><td class="empty" colspan="4">Loading…</td></tr>`;
+        const r = await fetch(API_URL, { method:'GET', cache:'no-store' });
+        const j = await r.json();
+        if (!j.ok) throw new Error(j.error || 'API error');
+
+        TODAY = j.today;
+        RAW = (j.items || []).map(x => ({
+          email: x.salesCoordinatorEmail,
+          client: x.clientName,
+          color: x.clientColor,
+          dates: (x.dueFollowups || []).map(d => d.callDateISO).sort()
+        }));
+
+        elSub.textContent = `Today: ${TODAY}  •  Records: ${RAW.length}`;
+        applyFilters();
+      } catch(err){
+        elSub.textContent = 'Failed to load';
+        elBody.innerHTML = `<tr><td class="empty" colspan="4">Error: ${err.message}</td></tr>`;
+        elCount.textContent = '';
+      }
+    }
+
+    // ====== Filters ======
+    function applyFilters(){
+      const scVal = elSc.value.trim().toLowerCase();
+      const q = elSearch.value.trim().toLowerCase();
+
+      FILTERED = RAW.filter(row => {
+        const bySc = scVal
+          ? (scVal === '__unknown'
+              ? !(row.email in SC_NAME)
+              : row.email?.toLowerCase?.() === scVal)
+          : true;
+
+        const byClient = q ? (row.client || '').toLowerCase().includes(q) : true;
+
+        return bySc && byClient;
+      });
+
+      renderTable(FILTERED);
+    }
+
+    // ====== Render ======
+    function renderTable(rows){
+      if (!rows.length){
+        elBody.innerHTML = `<tr><td class="empty" colspan="4">No records</td></tr>`;
+        elCount.textContent = '';
+        return;
+      }
+
+      const html = rows.map(row => {
+        const colorSwatch = `<span class="swatch" style="background:${safeColor(row.color)}"></span>`;
+        const colorLabel = (row.color || '').trim() || '-';
+
+        const dateChips = (row.dates || []).map(d => `<span class="datechip">${d}</span>`).join(' ');
+        const scName = scDisplay(row.email);
+
+        return `
+          <tr>
+            <td>${escapeHtml(row.client || '')}</td>
+            <td><span class="badge">${escapeHtml(scName)}</span></td>
+            <td>${colorSwatch} &nbsp; ${escapeHtml(colorLabel)}</td>
+            <td class="dates">${dateChips || '-'}</td>
+          </tr>
+        `;
+      }).join('');
+
+      elBody.innerHTML = html;
+      elCount.textContent = `Showing ${rows.length} of ${RAW.length}`;
+    }
+
+    // ====== Utils ======
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+    function safeColor(s){
+      const x = String(s||'').trim();
+      // allow simple names or hex
+      if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(x)) return x;
+      if (/^[a-z]{3,}$/i.test(x)) return x;
+      return '#e2e8f0';
+    }
+
+    // ====== Events ======
+    elSc.addEventListener('change', applyFilters);
+    elSearch.addEventListener('input', debounce(applyFilters, 150));
+    elRefresh.addEventListener('click', fetchData);
+
+    function debounce(fn, delay){
+      let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), delay); };
+    }
+
+    // Start
+    fetchData();
+  </script>
+</body>
+</html>

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NT Woods - PC Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-CF428LGWLQ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-CF428LGWLQ');
+  </script>
+  <style>
+    /* --- Extra styling for Inventory Audit Section --- */
+    .inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 12px;
+    }
+    .inventory-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+      border: 2px solid #e5e7eb;
+    }
+    .inventory-card:hover { transform: translateY(-3px); }
+    .inventory-card.red { border-color: #fecaca; background: #fee2e2; }
+    .inventory-card.green { border-color: #bbf7d0; background: #dcfce7; }
+    .inventory-card h3 { margin: 8px 0 4px; font-size: 1.1rem; font-weight: 700; }
+    .inventory-card .count { font-weight: 800; font-size: 1.2rem; }
+    .pulse {
+      animation: pulse 1.4s ease-out infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);}
+      70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);}
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);}
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">🌲 NT Woods</div>
+      <button class="theme-toggle" onclick="toggleDarkMode()">🌓 Toggle Theme</button>
+    </div>
+  </header>
+
+  <div class="main-wrapper">
+    <aside class="sidebar">
+      <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://ntwoods.github.io/ordertodispatch/O2DjourneyPC.html'" class="sidebar-btn">🐦‍🔥 O2D Journey</a>                                             
+        <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://ntwoods.github.io/ordertodispatch/completedSalesOrders.html'" class="sidebar-btn">🛒 Completed SO</a>                                             
+      </nav>           
+        <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://lookerstudio.google.com/reporting/b0d4bdd0-5e55-4163-9f36-0d292dab25e6/page/page_12345'" class="sidebar-btn">☑️ CheckList</a>                                             
+      </nav>
+      <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://ntwoods.github.io/processCoordinator/scotPC.html'" class="sidebar-btn">🥃 SCOT PORTAL</a>                                             
+      </nav>    
+      <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://ntwoods.github.io/PurchaseOrders/crmPurchaseReqView.html?mode=view'" class="sidebar-btn">👤 CRM Requests</a>                                             
+      </nav>      
+      <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://ntwoods.github.io/ordertodispatch/informOwnersClaimReq.html?mode=view'" class="sidebar-btn">Claim Requests</a>                                             
+      </nav>                 
+      <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://ntwoods.github.io/PurchaseOrders/missingSupplierCategories.html?mode=view'" class="sidebar-btn">Manage Categories</a>                                             
+      </nav>                                 
+      <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://ntwoods.github.io/ordertodispatch/raiseTicket.html'" class="sidebar-btn">🆘 Help Slip</a>                                             
+      </nav>            
+      <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://docs.google.com/spreadsheets/d/1UeohB4IPgEzGwybOJaIKpCIa38A4UvBstM8waqYv9V0/edit?gid=0#gid=0'" class="sidebar-btn">🧾 IMS NT Woods</a>                                             
+      </nav>      
+      <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://docs.google.com/spreadsheets/d/13tKeARKt4U1fteW6N31nRDfY3zWX4aEqnLrv-8eKpiE/edit?gid=0#gid=0'" class="sidebar-btn">🧾 IMS NexTree</a>                                             
+      </nav>            
+      <nav class="sidebar-nav">                                
+          <a onclick="location.href='https://docs.google.com/spreadsheets/d/1Sfwb5OwFhpeHsenSyP5lhH-ykdvbj_PPFjDBe4yUibA/edit?gid=763969696#gid=763969696'" class="sidebar-btn">🧾 IMS Order Merging</a>                                             
+      </nav>           
+    </aside>
+
+    <div class="content-area">
+      <section class="section" id="sales-management">
+        <h2 class="section-title">📋 Sales Orders Management</h2>
+        <div class="dashboard-grid">
+          <div class="card loading" id="crmAssignCard" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L00.html?mode=view'">
+            <div class="card-icon">🎯</div>
+            <h3 class="card-title">CRM Not Assigned</h3>
+            <div class="card-count" id="crmAssignCount">Loading...</div>
+          </div>
+
+          <div class="card loading" id="ownersApprovalCard" onclick="location.href='https://ntwoods.github.io/ordertodispatch/OwnerApprovalSOview.html'">
+            <div class="card-icon">✅</div>
+            <h3 class="card-title">Owner's Approval</h3>
+            <div class="card-count" id="ownersApprovalCount">Loading...</div>
+          </div>
+
+          <div class="card loading" id="dispatchConfirmCard" onclick="location.href='https://ntwoods.github.io/ordertodispatch/DispatchTeam.html?mode=view'">
+            <div class="card-icon">🚛</div>
+            <h3 class="card-title">Dispatch Confirmation</h3>
+            <div class="card-count" id="dispatchConfirmCount">Loading...</div>
+          </div>
+        </div>
+      </section>
+      <section class="section" id="purchase-orders">
+        <h2 class="section-title">👥 CRM Level Tasks</h2>
+        <div class="purchase-grid">
+            <div class="card small loading" id="priyamLevel1Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L1.html?mode=view'">
+              <div class="card-icon">1️⃣</div>
+              <h3 class="card-title">Credit & Stock Check</h3>
+              <div class="card-count" id="priyamLevel1Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="priyamLevel2Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L2.html?mode=view'">
+              <div class="card-icon">2️⃣</div>
+              <h3 class="card-title">Dealer Call & Update</h3>
+              <div class="card-count" id="priyamLevel2Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="priyamLevel3Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L3.html?mode=view'">
+              <div class="card-icon">3️⃣</div>
+              <h3 class="card-title">Tentative Dispatch Date</h3>
+              <div class="card-count" id="priyamLevel3Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="priyamLevel4Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L4.html?mode=view'">
+              <div class="card-icon">4️⃣</div>
+              <h3 class="card-title">Dispatch Reminder</h3>
+              <div class="card-count" id="priyamLevel4Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="priyamLevel5Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L5.html?mode=view'">
+              <div class="card-icon">5️⃣</div>
+              <h3 class="card-title">Dispatch Info to Dealer</h3>
+              <div class="card-count" id="priyamLevel5Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="priyamLevel6Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L6.html?mode=view'">
+              <div class="card-icon">6️⃣</div>
+              <h3 class="card-title">Delivery Confirmation</h3>
+              <div class="card-count" id="priyamLevel6Count">Loading...</div>
+            </div>
+
+            <div class="card small loading" id="priyamLevel7Card" onclick="location.href='https://ntwoods.github.io/ordertodispatch/L7.html?mode=view'">
+              <div class="card-icon">7️⃣</div>
+              <h3 class="card-title">Hold Order Management</h3>
+              <div class="card-count" id="priyamLevel7Count">Loading...</div>
+            </div>            
+          </div>
+        </div>
+      </section>
+      <!-- Purchase Section -->
+      <section class="section" id="purchase-orders">
+        <h2 class="section-title">💼 Purchase Orders Management</h2>
+        <div class="purchase-grid">
+          <div class="card loading" id="purchaseVerifyCard" onclick="location.href='https://ntwoods.github.io/PurchaseOrders/POverifier.html?mode=view'">
+            <div class="card-icon">🔍</div>
+            <h3 class="card-title">PO Verification</h3>
+            <div class="card-count" id="purchaseVerifyCount">Loading...</div>
+          </div>
+
+          <div class="card loading" id="poSupplierCard" onclick="location.href='https://ntwoods.github.io/PurchaseOrders/SendToSupplier.html?mode=view'">
+            <div class="card-icon">📤</div>
+            <h3 class="card-title">Send PO to Supplier</h3>
+            <div class="card-count" id="poSupplierCount">Loading...</div>
+          </div>
+
+          <div class="card loading" id="getDispatchDateCard" onclick="location.href='https://ntwoods.github.io/PurchaseOrders/GetDispatchDate.html?mode=view'">
+            <div class="card-icon">📅</div>
+            <h3 class="card-title">Get Dispatch Date</h3>
+            <div class="card-count" id="getDispatchDateCount">Loading...</div>
+          </div>
+
+          <div class="card loading" id="dispatchFollowUpCard" onclick="location.href='https://ntwoods.github.io/PurchaseOrders/DispatchFollowUp.html?mode=view'">
+            <div class="card-icon">📞</div>
+            <h3 class="card-title">Dispatch Follow Up</h3>
+            <div class="card-count" id="dispatchFollowUpCount">Loading...</div>
+          </div>
+
+          <div class="card loading" id="dispatchFollowUpADayBeforeCard" onclick="location.href='https://ntwoods.github.io/PurchaseOrders/DispatchFollowUpADayBefore.html?mode=view'">
+            <div class="card-icon">📞</div>
+            <h3 class="card-title">Dispatch Follow Up A Day Before</h3>
+            <div class="card-count" id="dispatchFollowUpADayBeforeCount">Loading...</div>
+          </div>
+          
+          <div class="card loading" id="getDispatchDetailsCard" onclick="location.href='https://ntwoods.github.io/PurchaseOrders/GetDispatch&LR.html?mode=view'">
+            <div class="card-icon">📋</div>
+            <h3 class="card-title">Get Dispatch & LR Details</h3>
+            <div class="card-count" id="getDispatchDetailsCount">Loading...</div>
+          </div>
+
+          <div class="card loading" id="receivedAtGodown" onclick="location.href='https://ntwoods.github.io/PurchaseOrders/ReceivedAtGodown.html?mode=view'">
+            <div class="card-icon">📋</div>
+            <h3 class="card-title">Goods Received At Godown</h3>
+            <div class="card-count" id="receivedAtGodownCount">Loading...</div>
+          </div>
+         
+          <div class="card loading" id="manageHoldPOCard" onclick="location.href='https://ntwoods.github.io/PurchaseOrders/manageHoldPO.html?mode=view'">
+            <div class="card-icon">📋</div>
+            <h3 class="card-title">Manage Hold PO</h3>
+            <div class="card-count" id="manageHoldPOCount">Loading...</div>
+          </div>          
+
+          <div class="card loading" id="acPortal" onclick="location.href='https://ntwoods.github.io/PurchaseOrders/AcDashboard.html?mode=view'">
+            <div class="card-icon">📋</div>
+            <h3 class="card-title">Accounts Portal</h3>
+            <div class="card-count" id="acPortalCount">Loading...</div>
+          </div>                 
+          
+          <div class="card" onclick="location.href='https://ntwoods.github.io/PurchaseOrders/PO_WATCH'">
+            <div class="card-icon">🎯</div>
+            <h3 class="card-title">360° PO Watch</h3>
+            <div class="card-count">Monitor All</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Inventory Audit Management Section -->
+      <section class="section" id="inventory-audit">
+        <h2 class="section-title">🧾 Inventory Audit Management</h2>
+        <div class="inventory-grid">
+          <div class="inventory-card" id="card-start" onclick="location.href='https://ntwoods.github.io/audit/startAudit.html?mode=view'">
+            <h3>START AUDIT</h3>
+            <div class="count" id="count-start">Loading...</div>
+          </div>
+
+          <div class="inventory-card" id="card-verify-audit" onclick="location.href='https://ntwoods.github.io/audit/verifyAudit.html?mode=view'">
+            <h3>VERIFY AUDIT</h3>
+            <div class="count" id="count-verify-audit">Loading...</div>
+          </div>
+
+          <div class="inventory-card" id="card-journal" onclick="location.href='https://ntwoods.github.io/audit/journalEntry.html?mode=view'">
+            <h3>JOURNAL ENTRY</h3>
+            <div class="count" id="count-journal">Loading...</div>
+          </div>
+
+          <div class="inventory-card" id="card-verify" onclick="location.href='https://ntwoods.github.io/audit/verifyJournalEntry?mode=view'">
+            <h3>VERIFY JOURNAL ENTRIES</h3>
+            <div class="count" id="count-verify">Loading...</div>
+          </div>
+          <div class="inventory-card" id="card-account" onclick="location.href='https://ntwoods.github.io/audit/tallyTask?mode=view'">
+            <h3>ACCOUNT WORKING</h3>
+            <div class="count" id="count-account">Loading...</div>
+          </div>
+          
+        </div>
+      </section>
+      <section class="section" id="inventory-audit">
+        <h2 class="section-title">🛄 Claim Management</h2>
+        <div class="inventory-grid">
+          <div class="inventory-card" id="card-crm" onclick="location.href='https://ntwoods.github.io/ordertodispatch/informOwnersClaimReq.html?mode=view'">
+            <h3>Claims at CRM End</h3>
+            <div class="count" id="count-crm">Loading...</div>
+          </div>
+
+          <div class="inventory-card" id="card-acc" onclick="location.href='https://ntwoods.github.io/ordertodispatch/claimRequestAtAccounts.html?mode=view'">
+            <h3>Claims at Accounts End</h3>
+            <div class="count" id="count-acc">Loading...</div>
+          </div>          
+        </div>
+      </section>      
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+
+  <!-- Inline JS for Inventory Audit Section -->
+<script>
+  (function(){
+    const endpoints = {
+      start:  "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=pending",
+      verifyAudit: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=error",
+      journal: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=verifyerror",
+      verify: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=journalentry",
+      account: "https://script.google.com/macros/s/AKfycbze820nXuy0s0RZNajlPzFq4AeyEaOhjp3IS_tqfi2RB7XKbzYvOi2nwXFUEUqtXh56/exec?action=verifiedjournalentry",
+      crm: 'https://script.google.com/macros/s/AKfycbw8K5xr1V52_zKMfy9gJyWZE0kuxsu0Gjoo2bdNfIXz9-zDDxFCHp2i4mdrLDZxs-BFbA/exec',
+      acc: 'https://script.google.com/macros/s/AKfycbz0AMQP0qbmcpDl85pjfhF-0B1PW1GxQz_qRJj0ShDS0Pf4-CgVjslrY8CFmfX_hbzdeg/exec',
+    };
+
+    async function fetchData(url){
+      const u = new URL(url);
+      u.searchParams.set("_", Date.now()); // no-cache
+      try {
+        const res = await fetch(u);
+        if (!res.ok) return [];
+        const json = await res.json();
+
+        // Accept any of these shapes: {success:true,data:[...]}, {data:[...]}, or just [...]
+        if (Array.isArray(json)) return json;
+        if (json && Array.isArray(json.data)) return json.data;
+        if (json && json.success === true && Array.isArray(json.records)) return json.records;
+        return [];
+      } catch {
+        return [];
+      }
+    }
+
+    function applyCount(el, count){
+      if (!el) return; // guard against missing tiles
+      el.classList.remove("red","green","pulse");
+      const countEl = el.querySelector(".count");
+      if (!countEl) return;
+
+      if (count > 0){
+        el.classList.add("red","pulse");
+        countEl.textContent = count + " pending";
+      } else {
+        el.classList.add("green");
+        countEl.textContent = "All Clear";
+      }
+    }
+
+    async function loadCounts(){
+      try {
+        const [
+          startArr, verifyAuditArr, journalArr, verifyArr, accountArr, crmArr, accArr
+        ] = await Promise.all([
+          fetchData(endpoints.start),
+          fetchData(endpoints.verifyAudit),
+          fetchData(endpoints.journal),
+          fetchData(endpoints.verify),
+          fetchData(endpoints.account),
+          fetchData(endpoints.crm),
+          fetchData(endpoints.acc)
+        ]);
+
+        applyCount(document.getElementById("card-start"), startArr.length);
+        applyCount(document.getElementById("card-verify-audit"), verifyAuditArr.length);
+        applyCount(document.getElementById("card-journal"), journalArr.length);
+        applyCount(document.getElementById("card-verify"), verifyArr.length);
+        applyCount(document.getElementById("card-account"), accountArr.length);
+        applyCount(document.getElementById("card-crm"), crmArr.length);   // ← Claim tile #1
+        applyCount(document.getElementById("card-acc"), accArr.length);   // ← Claim tile #2
+      } catch (e){
+        // Optional: show a soft error state instead of crashing
+        ["card-start","card-verify-audit","card-journal","card-verify","card-account","card-crm","card-acc"]
+          .forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove("red","green","pulse");
+            const countEl = el.querySelector(".count");
+            if (countEl) countEl.textContent = "Error";
+          });
+      }
+    }
+
+    loadCounts();
+  })();
+</script>
+</body>
+</html>

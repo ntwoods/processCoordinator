@@ -1,6 +1,3 @@
-/******** CONFIG ********/
-
-// 👇 Yahan PC API Web App URL daalna hai (PC_API.gs se deploy karke)
 const API_BASE = 'https://script.google.com/macros/s/AKfycbzwLE2kdkFL8nJyLdP-TLCqXHkbbeaX8aqGNDfN5iZD3ypvpx9QTSLhS00mwtGMI5Ip5A/exec';
 
 let currentUser = null;
@@ -204,7 +201,6 @@ function switchTab(tab) {
   document.getElementById('followups-list').classList.toggle('active', tab === 'FOLLOWUPS');
   document.getElementById('timelines-list').classList.toggle('active', tab === 'TIMELINES');
 
-  // Filters: status vs outcome
   document.getElementById('status-filter-container').classList.toggle('hidden', tab !== 'FOLLOWUPS');
   document.getElementById('outcome-filter-container').classList.toggle('hidden', tab !== 'TIMELINES');
 
@@ -219,11 +215,12 @@ function renderCurrentTab() {
   }
 }
 
-/******** UI: FOLLOWUPS (ALL USERS) ********/
+/******** UI: FOLLOWUPS TABLE ********/
 
 function renderFollowups() {
-  const container = document.getElementById('followups-list');
-  container.innerHTML = '';
+  const tbody = document.querySelector('#followups-table tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
 
   const search = document.getElementById('search-input').value.toLowerCase();
   const userFilter = document.getElementById('user-filter').value;
@@ -241,7 +238,6 @@ function renderFollowups() {
       (f.mobile || '') + ' ' +
       (f.userName || '')
     ).toLowerCase();
-
     if (search && !text.includes(search)) return false;
 
     if (statusFilter === 'OVERDUE' && !f.isOverdue) return false;
@@ -252,7 +248,7 @@ function renderFollowups() {
       const dStr = d.toISOString().slice(0, 10);
       const tStr = today.toISOString().slice(0, 10);
       if (dStr !== tStr) return false;
-      if (f.dueMs < nowMs) return false; // ensure not overdue
+      if (f.dueMs < nowMs) return false;
     }
     if (statusFilter === 'UPCOMING') {
       if (!f.dueMs) return false;
@@ -271,75 +267,56 @@ function renderFollowups() {
   });
 
   if (!list.length) {
-    container.innerHTML = '<p style="color:#9ca3af;font-size:0.9rem;">No open follow-ups.</p>';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="empty-row" colspan="10">No open follow-ups.</td>`;
+    tbody.appendChild(tr);
     return;
   }
 
-  list.forEach(f => {
-    const card = document.createElement('div');
-    card.className = 'card followup-card';
-    card.dataset.dueMs = f.dueMs || '';
-    card.dataset.clientkey = f.clientKey || '';
+  list.forEach((f, idx) => {
+    const tr = document.createElement('tr');
+    tr.className = 'followup-row';
+    if (f.isOverdue) tr.classList.add('overdue-row');
+    tr.dataset.dueMs = f.dueMs || '';
+    tr.dataset.clientkey = f.clientKey || '';
 
-    const dueLabel = formatDueLabel(f.dueMs);
-    const overdue = f.isOverdue;
+    const dueDateStr = f.dueMs ? new Date(f.dueMs).toLocaleString() : '';
 
-    const statusBadgeText = overdue ? 'Overdue' :
-      (f.dueMs ? 'Scheduled' : 'No Date');
+    const countdownLabel = formatDueLabel(f.dueMs);
 
-    card.innerHTML = `
-      <div class="card-header">
-        <div>
-          <div class="card-title">
-            ${escapeHtml(f.clientName)} (${escapeHtml(f.mobile)})
-          </div>
-          <div class="card-subtitle">
-            ${escapeHtml(f.station || '')}
-          </div>
-          <div class="badge-secondary">
-            ${escapeHtml(f.userName || f.userEmail || '')}
-          </div>
-        </div>
-        <div style="text-align:right;">
-          <div class="badge ${overdue ? 'badge-overdue' : ''}">
-            ${escapeHtml(statusBadgeText)}
-          </div>
-          <div class="badge-secondary">
-            Next: ${escapeHtml(f.nextActionType || '')}
-          </div>
-        </div>
-      </div>
-
-      <div class="card-body">
-        <div><strong>Countdown:</strong> <span class="countdown-text">${dueLabel}</span></div>
-        ${f.remark ? `<div><strong>Remark:</strong> ${escapeHtml(f.remark)}</div>` : ''}
-      </div>
-
-      <div class="card-footer">
-        <div class="counts-pill">
-          Calls: ${f.callsBefore} &middot; Visits: ${f.visitsBefore}
-        </div>
-        <div>
-          <span class="history-link">View History</span>
-        </div>
-      </div>
+    tr.innerHTML = `
+      <td class="row-index">${idx + 1}</td>
+      <td class="client-cell">
+        ${escapeHtml(f.clientName || '')}
+        <span class="client-sub">${escapeHtml(f.station || '')}</span>
+      </td>
+      <td>${escapeHtml(f.mobile || '')}</td>
+      <td class="mkt-person-cell">${escapeHtml(f.userName || f.userEmail || '')}</td>
+      <td>${escapeHtml(f.nextActionType || '')}</td>
+      <td>${dueDateStr}</td>
+      <td class="countdown-cell"><span class="countdown-text">${countdownLabel}</span></td>
+      <td>Calls: ${f.callsBefore} / Visits: ${f.visitsBefore}</td>
+      <td class="remark-cell" title="${escapeHtml(f.remark || '')}">${escapeHtml(f.remark || '')}</td>
+      <td>
+        <a href="javascript:void(0)" class="badge-link history-link">View</a>
+      </td>
     `;
 
-    // History click
-    card.querySelector('.history-link').addEventListener('click', (ev) => {
+    tr.querySelector('.history-link').addEventListener('click', (ev) => {
       ev.stopPropagation();
       openHistoryModal(f.clientKey, f.clientName, f.mobile);
     });
 
-    container.appendChild(card);
+    tbody.appendChild(tr);
   });
 }
 
-/******** UI: CLIENT TIMELINES ********/
+/******** UI: TIMELINES TABLE ********/
 
 function renderTimelines() {
-  const container = document.getElementById('timelines-list');
-  container.innerHTML = '';
+  const tbody = document.querySelector('#timeline-table tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
 
   const search = document.getElementById('search-input').value.toLowerCase();
   const userFilter = document.getElementById('user-filter').value;
@@ -363,7 +340,9 @@ function renderTimelines() {
   });
 
   if (!list.length) {
-    container.innerHTML = '<p style="color:#9ca3af;font-size:0.9rem;">No activities found.</p>';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="empty-row" colspan="9">No activities found.</td>`;
+    tbody.appendChild(tr);
     return;
   }
 
@@ -378,52 +357,46 @@ function renderTimelines() {
 
   const latestList = Object.values(grouped).sort((a, b) => (b.tsMs || 0) - (a.tsMs || 0));
 
-  latestList.forEach(a => {
-    const card = document.createElement('div');
-    card.className = 'card';
+  latestList.forEach((a, idx) => {
+    const tr = document.createElement('tr');
 
     const dateStr = a.tsMs ? new Date(a.tsMs).toLocaleString() : '';
 
-    let outcomeLabel = a.outcome;
-    if (a.outcome === 'FOLLOW_UP') outcomeLabel = 'Follow Up';
-    if (a.outcome === 'DEAL_MATURED') outcomeLabel = 'Deal Matured';
-    if (a.outcome === 'DEAL_CANCELLED') outcomeLabel = 'Deal Cancelled';
+    let outcomeLabel = 'Follow Up';
+    let outcomeClass = 'tag-followup';
+    if (a.outcome === 'DEAL_MATURED') {
+      outcomeLabel = 'Deal Matured';
+      outcomeClass = 'tag-matured';
+    } else if (a.outcome === 'DEAL_CANCELLED') {
+      outcomeLabel = 'Deal Cancelled';
+      outcomeClass = 'tag-cancelled';
+    } else if (a.outcome === 'FOLLOW_UP') {
+      outcomeLabel = 'Follow Up';
+      outcomeClass = 'tag-followup';
+    }
 
-    card.innerHTML = `
-      <div class="card-header">
-        <div>
-          <div class="card-title">
-            ${escapeHtml(a.clientName)} (${escapeHtml(a.mobile)})
-          </div>
-          <div class="card-subtitle">
-            ${escapeHtml(a.station || '')}
-          </div>
-          <div class="badge-secondary">
-            ${escapeHtml(a.userName || a.userEmail || '')}
-          </div>
-        </div>
-        <div class="badge">
-          ${escapeHtml(outcomeLabel)}
-        </div>
-      </div>
-
-      <div class="card-body">
-        <div><strong>Last Activity:</strong> ${escapeHtml(a.activityType)} on ${dateStr}</div>
-        ${a.remark ? `<div><strong>Remark:</strong> ${escapeHtml(a.remark)}</div>` : ''}
-        ${a.attachmentUrl ? `<div><a href="${a.attachmentUrl}" target="_blank">Association Form</a></div>` : ''}
-      </div>
-
-      <div class="card-footer">
-        <span class="history-link">View Full History</span>
-        <span style="font-size:0.8rem;">Use this to remind marketing person before deadline.</span>
-      </div>
+    tr.innerHTML = `
+      <td class="row-index">${idx + 1}</td>
+      <td class="client-cell">
+        ${escapeHtml(a.clientName || '')}
+        <span class="client-sub">${escapeHtml(a.station || '')}</span>
+      </td>
+      <td>${escapeHtml(a.mobile || '')}</td>
+      <td class="mkt-person-cell">${escapeHtml(a.userName || a.userEmail || '')}</td>
+      <td>${escapeHtml(a.activityType || '')}</td>
+      <td><span class="tag ${outcomeClass}">${escapeHtml(outcomeLabel)}</span></td>
+      <td>${dateStr}</td>
+      <td class="remark-cell" title="${escapeHtml(a.remark || '')}">${escapeHtml(a.remark || '')}</td>
+      <td>
+        <a href="javascript:void(0)" class="badge-link history-link">View</a>
+      </td>
     `;
 
-    card.querySelector('.history-link').addEventListener('click', () => {
+    tr.querySelector('.history-link').addEventListener('click', () => {
       openHistoryModal(a.clientKey, a.clientName, a.mobile);
     });
 
-    container.appendChild(card);
+    tbody.appendChild(tr);
   });
 }
 
@@ -454,12 +427,12 @@ function openHistoryModal(clientKey, clientName, mobile) {
     item.innerHTML = `
       <div class="history-item-header">
         <div>
-          ${escapeHtml(a.activityType)} • ${dateStr}<br/>
+          ${escapeHtml(a.activityType || '')} • ${dateStr}<br/>
           <span style="font-size:0.75rem;color:#6b7280;">
             ${escapeHtml(a.userName || a.userEmail || '')}
           </span>
         </div>
-        <div class="history-tag">${escapeHtml(tag)}</div>
+        <div class="history-tag">${escapeHtml(tag || '')}</div>
       </div>
       ${a.remark ? `<div>Remark: ${escapeHtml(a.remark)}</div>` : ''}
     `;
@@ -478,18 +451,22 @@ function closeHistoryModal() {
 function startCountdownTimer() {
   if (countdownInterval) clearInterval(countdownInterval);
   countdownInterval = setInterval(() => {
-    const cards = document.querySelectorAll('.followup-card');
+    const rows = document.querySelectorAll('tr.followup-row');
     const now = Date.now();
-    cards.forEach(card => {
-      const dueMs = Number(card.dataset.dueMs || '0');
-      const el = card.querySelector('.countdown-text');
-      if (!dueMs || !el) return;
+    rows.forEach(row => {
+      const dueMs = Number(row.dataset.dueMs || '0');
+      const cell = row.querySelector('.countdown-cell');
+      const span = row.querySelector('.countdown-text');
+      if (!dueMs || !cell || !span) return;
+
       const diff = dueMs - now;
       if (diff <= 0) {
-        el.textContent = 'Overdue';
-        card.classList.add('overdue');
+        span.textContent = 'Overdue';
+        cell.classList.add('overdue');
       } else {
-        el.textContent = formatDiff(diff);
+        span.textContent = formatDiff(diff);
+        cell.classList.remove('overdue');
+        cell.classList.toggle('soon', diff <= 2 * 60 * 60 * 1000); // 2 hours
       }
     });
   }, 1000);

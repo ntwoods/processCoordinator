@@ -56,38 +56,24 @@
         <div class="stats-card">
           <h3>Follow-up Snapshot</h3>
           <div class="stats-row">
-            <div class="stat-pill">
-              Open: <span id="stat-open">0</span>
-            </div>
-            <div class="stat-pill stat-overdue">
-              Overdue: <span id="stat-overdue">0</span>
-            </div>
-            <div class="stat-pill">
-              Today: <span id="stat-today">0</span>
-            </div>
-            <div class="stat-pill">
-              Upcoming: <span id="stat-upcoming">0</span>
-            </div>
+            <div class="stat-pill">Open: <span id="stat-open">0</span></div>
+            <div class="stat-pill stat-overdue">Overdue: <span id="stat-overdue">0</span></div>
+            <div class="stat-pill">Today: <span id="stat-today">0</span></div>
+            <div class="stat-pill">Upcoming: <span id="stat-upcoming">0</span></div>
           </div>
         </div>
 
         <div class="stats-card">
           <h3>Deals Summary</h3>
           <div class="stats-row">
-            <div class="stat-pill">
-              Matured: <span id="stat-matured">0</span>
-            </div>
-            <div class="stat-pill stat-cancelled">
-              Cancelled: <span id="stat-cancelled">0</span>
-            </div>
+            <div class="stat-pill">Matured: <span id="stat-matured">0</span></div>
+            <div class="stat-pill stat-cancelled">Cancelled: <span id="stat-cancelled">0</span></div>
           </div>
         </div>
 
         <div class="stats-card stats-wide">
           <h3>Top Overdue – Marketing Persons</h3>
-          <div id="stat-top-users" class="top-users-list">
-            <!-- Filled by JS -->
-          </div>
+          <div id="stat-top-users" class="top-users-list"></div>
         </div>
       </section>
 
@@ -110,7 +96,6 @@
         <div class="filter-group">
           <select id="user-filter">
             <option value="ALL">All Marketing Persons</option>
-            <!-- JS will inject users -->
           </select>
         </div>
 
@@ -135,8 +120,50 @@
 
       <!-- CONTENT -->
       <main class="content">
-        <div id="followups-list" class="list active"></div>
-        <div id="timelines-list" class="list"></div>
+        <!-- FOLLOWUPS TABLE -->
+        <div id="followups-list" class="list active">
+          <div class="table-wrapper">
+            <table class="data-table" id="followups-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Client / Station</th>
+                  <th>Mobile</th>
+                  <th>Marketing Person</th>
+                  <th>Next Action</th>
+                  <th>Due</th>
+                  <th>Countdown</th>
+                  <th>Calls / Visits</th>
+                  <th>Remark</th>
+                  <th>History</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TIMELINES TABLE -->
+        <div id="timelines-list" class="list">
+          <div class="table-wrapper">
+            <table class="data-table" id="timeline-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Client / Station</th>
+                  <th>Mobile</th>
+                  <th>Marketing Person</th>
+                  <th>Last Activity</th>
+                  <th>Outcome</th>
+                  <th>Last Activity Time</th>
+                  <th>Remark</th>
+                  <th>History</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
       </main>
     </div>
 

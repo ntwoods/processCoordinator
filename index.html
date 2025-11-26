@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Process Coordinator – Follow-up Monitor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <link rel="stylesheet" href="pc-styles.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="screen active">
+      <div class="login-card">
+        <h1>Process Coordinator Dashboard</h1>
+        <p>Sign in with your NT Woods Google account</p>
+
+        <div id="g_id_onload"
+          data-client_id="360849757137-agopfs0m8rgmcj541ucpg22btep5olt3.apps.googleusercontent.com"
+          data-context="signin"
+          data-ux_mode="popup"
+          data-callback="handleGoogleCredential"
+          data-auto_prompt="false">
+        </div>
+
+        <div class="g_id_signin"
+          data-type="standard"
+          data-shape="pill"
+          data-theme="outline"
+          data-text="continue_with"
+          data-size="large"
+          data-logo_alignment="left">
+        </div>
+
+        <div id="login-error" class="error-msg"></div>
+      </div>
+    </div>
+
+    <!-- MAIN SCREEN -->
+    <div id="main-screen" class="screen">
+      <header class="top-bar">
+        <div>
+          <h2>Process Coordinator Dashboard</h2>
+          <div class="subtitle">
+            <span id="user-name"></span> &middot;
+            <span id="user-email"></span>
+          </div>
+        </div>
+        <button id="btn-logout" class="btn-outline">Logout</button>
+      </header>
+
+      <!-- STATS SECTION -->
+      <section class="stats-section">
+        <div class="stats-card">
+          <h3>Follow-up Snapshot</h3>
+          <div class="stats-row">
+            <div class="stat-pill">
+              Open: <span id="stat-open">0</span>
+            </div>
+            <div class="stat-pill stat-overdue">
+              Overdue: <span id="stat-overdue">0</span>
+            </div>
+            <div class="stat-pill">
+              Today: <span id="stat-today">0</span>
+            </div>
+            <div class="stat-pill">
+              Upcoming: <span id="stat-upcoming">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-card">
+          <h3>Deals Summary</h3>
+          <div class="stats-row">
+            <div class="stat-pill">
+              Matured: <span id="stat-matured">0</span>
+            </div>
+            <div class="stat-pill stat-cancelled">
+              Cancelled: <span id="stat-cancelled">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-card stats-wide">
+          <h3>Top Overdue – Marketing Persons</h3>
+          <div id="stat-top-users" class="top-users-list">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- TABS -->
+      <section class="tabs">
+        <button id="tab-followups" class="tab active">Open Follow-ups</button>
+        <button id="tab-timelines" class="tab">Client Timelines</button>
+      </section>
+
+      <!-- FILTERS -->
+      <section class="filters">
+        <div class="filter-group">
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Search by client / station / mobile..."
+          />
+        </div>
+
+        <div class="filter-group">
+          <select id="user-filter">
+            <option value="ALL">All Marketing Persons</option>
+            <!-- JS will inject users -->
+          </select>
+        </div>
+
+        <div class="filter-group" id="status-filter-container">
+          <select id="status-filter">
+            <option value="ALL">All Status</option>
+            <option value="OVERDUE">Overdue</option>
+            <option value="TODAY">Today</option>
+            <option value="UPCOMING">Upcoming</option>
+          </select>
+        </div>
+
+        <div class="filter-group hidden" id="outcome-filter-container">
+          <select id="outcome-filter">
+            <option value="ALL">All Outcomes</option>
+            <option value="FOLLOW_UP">Follow Up</option>
+            <option value="DEAL_MATURED">Deal Matured</option>
+            <option value="DEAL_CANCELLED">Deal Cancelled</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- CONTENT -->
+      <main class="content">
+        <div id="followups-list" class="list active"></div>
+        <div id="timelines-list" class="list"></div>
+      </main>
+    </div>
+
+    <!-- HISTORY MODAL -->
+    <div id="history-modal" class="modal hidden">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content history-modal-content">
+        <h3 id="history-title">Client History</h3>
+        <div id="history-list" class="history-list"></div>
+        <div class="modal-actions">
+          <button id="btn-close-history" class="btn-primary">Close</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

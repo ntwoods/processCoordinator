@@ -78,10 +78,12 @@
       </section>
 
       <!-- TABS -->
-      <section class="tabs">
-        <button id="tab-followups" class="tab active">Open Follow-ups</button>
-        <button id="tab-timelines" class="tab">Client Timelines</button>
-      </section>
+    <section class="tabs">
+      <button id="tab-followups" class="tab active">Open Follow-ups</button>
+      <button id="tab-timelines" class="tab">Client Timelines</button>
+      <button id="tab-routes" class="tab">Weekly Routes</button> <!-- 👈 NEW -->
+    </section>
+
 
       <!-- FILTERS -->
       <section class="filters">
@@ -164,6 +166,29 @@
             </table>
           </div>
         </div>
+
+      <!-- ROUTES VIEW -->
+      <div id="routes-list" class="list">
+        <div class="routes-header">
+          <div>
+            <h3 class="routes-title">Weekly Route – Current Week</h3>
+            <p id="routes-week-range" class="routes-subtitle">
+              Loading current week...
+            </p>
+          </div>
+          <div class="routes-legend">
+            <span class="legend-pill legend-normal">Route</span>
+            <span class="legend-pill legend-leave">Leave</span>
+            <span class="legend-pill legend-empty">No Plan</span>
+          </div>
+        </div>
+      
+        <div class="routes-wrapper">
+          <div id="routes-grid" class="routes-grid">
+            <!-- JS se cards inject honge -->
+          </div>
+        </div>
+      </div>       
       </main>
     </div>
 

@@ -462,6 +462,153 @@ button {
 
 /* RESPONSIVE */
 
+/* WEEKLY ROUTES */
+
+.routes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 10px;
+  padding: 4px 2px;
+}
+
+.routes-title {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.routes-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.routes-legend {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.75rem;
+}
+
+.legend-pill {
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.legend-normal {
+  background: var(--primary-soft);
+  border-color: rgba(37, 99, 235, 0.35);
+}
+
+.legend-leave {
+  background: #fef3c7;
+  border-color: #facc15;
+}
+
+.legend-empty {
+  background: #f9fafb;
+  color: #9ca3af;
+}
+
+.routes-wrapper {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  padding: 10px 12px 12px;
+}
+
+.routes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.route-card {
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  padding: 8px 10px;
+  background: #f9fafb;
+}
+
+.route-card-header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 6px;
+}
+
+.route-user-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.route-user-email {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.route-days-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.route-day-pill {
+  border-radius: 12px;
+  padding: 5px 4px;
+  text-align: center;
+  border: 1px solid var(--border);
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.route-day-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.route-station {
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+
+.route-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.route-pill-normal {
+  background: var(--primary-soft);
+  border-color: rgba(37, 99, 235, 0.35);
+}
+
+.route-pill-leave {
+  background: #fef3c7;
+  border-color: #facc15;
+}
+
+.route-pill-empty {
+  background: #f9fafb;
+  color: #9ca3af;
+}
+
+.empty-route-msg {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+/* responsive tweak */
+@media (max-width: 960px) {
+  .route-days-row {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+
 @media (max-width: 960px) {
   .stats-section {
     grid-template-columns: 1fr;

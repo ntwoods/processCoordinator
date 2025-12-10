@@ -5,10 +5,13 @@ let pcData = {
   stats: null,
   followups: [],
   activities: [],
-  perUserStats: {}
+  perUserStats: {},
+  routes: [],             // 👈 NEW
+  routeWeekStartYmd: ''   // 👈 NEW
 };
 let countdownInterval = null;
 let currentTab = 'FOLLOWUPS';
+
 
 /******** GOOGLE SIGN-IN ********/
 
@@ -62,6 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
     .addEventListener('click', () => switchTab('FOLLOWUPS'));
   document.getElementById('tab-timelines')
     .addEventListener('click', () => switchTab('TIMELINES'));
+  document.getElementById('tab-routes')                      // 👈 NEW
+    .addEventListener('click', () => switchTab('ROUTES'));   // 👈 NEW
+  
 
   // Filters
   document.getElementById('search-input')
@@ -120,6 +126,8 @@ async function fetchBootstrap() {
     pcData.followups = data.followups || [];
     pcData.activities = data.activities || [];
     pcData.perUserStats = (data.stats && data.stats.perUser) || {};
+    pcData.routes = data.routePlans || [];              // 👈 NEW
+    pcData.routeWeekStartYmd = data.routeWeekStartYmd || ''; // 👈 NEW
 
     updateStatsUI();
     updateUserFilterOptions();
@@ -173,15 +181,41 @@ function updateUserFilterOptions() {
   const prevValue = select.value;
   select.innerHTML = '<option value="ALL">All Marketing Persons</option>';
 
-  const perUser = pcData.stats ? pcData.stats.perUser || {} : {};
-  const list = Object.values(perUser);
+  const userMap = {};
 
-  list.sort((a, b) => (a.name || a.email || '').localeCompare(b.name || b.email || ''));
+  // from follow-up stats
+  const perUser = pcData.stats ? pcData.stats.perUser || {} : {};
+  Object.values(perUser).forEach(u => {
+    userMap[u.email] = {
+      email: u.email,
+      name: u.name || u.email,
+      open: u.open || 0
+    };
+  });
+
+  // from RoutePlans (if someone has no open follow-ups)
+  (pcData.routes || []).forEach(r => {
+    if (!r.userEmail) return;
+    if (!userMap[r.userEmail]) {
+      userMap[r.userEmail] = {
+        email: r.userEmail,
+        name: r.userName || r.userEmail,
+        open: 0
+      };
+    }
+  });
+
+  const list = Object.values(userMap);
+
+  list.sort((a, b) =>
+    (a.name || a.email || '').localeCompare(b.name || b.email || '')
+  );
 
   list.forEach(u => {
     const opt = document.createElement('option');
     opt.value = u.email;
-    opt.textContent = `${u.name || u.email} (${u.open} open)`;
+    const suffix = u.open ? ` (${u.open} open)` : '';
+    opt.textContent = `${u.name || u.email}${suffix}`;
     select.appendChild(opt);
   });
 
@@ -190,6 +224,7 @@ function updateUserFilterOptions() {
   }
 }
 
+
 /******** UI: TABS ********/
 
 function switchTab(tab) {
@@ -197,12 +232,15 @@ function switchTab(tab) {
 
   document.getElementById('tab-followups').classList.toggle('active', tab === 'FOLLOWUPS');
   document.getElementById('tab-timelines').classList.toggle('active', tab === 'TIMELINES');
+  document.getElementById('tab-routes').classList.toggle('active', tab === 'ROUTES'); // 👈 NEW
 
   document.getElementById('followups-list').classList.toggle('active', tab === 'FOLLOWUPS');
   document.getElementById('timelines-list').classList.toggle('active', tab === 'TIMELINES');
+  document.getElementById('routes-list').classList.toggle('active', tab === 'ROUTES'); // 👈 NEW
 
   document.getElementById('status-filter-container').classList.toggle('hidden', tab !== 'FOLLOWUPS');
   document.getElementById('outcome-filter-container').classList.toggle('hidden', tab !== 'TIMELINES');
+  // routes view ke liye dono extra filters hide rahenge
 
   renderCurrentTab();
 }
@@ -210,12 +248,131 @@ function switchTab(tab) {
 function renderCurrentTab() {
   if (currentTab === 'FOLLOWUPS') {
     renderFollowups();
-  } else {
+  } else if (currentTab === 'TIMELINES') {
     renderTimelines();
+  } else if (currentTab === 'ROUTES') {
+    renderRoutes();      // 👈 NEW
   }
 }
 
 /******** UI: FOLLOWUPS TABLE ********/
+function renderRoutes() {
+  const grid = document.getElementById('routes-grid');
+  const weekLabelEl = document.getElementById('routes-week-range');
+  if (!grid || !weekLabelEl) return;
+
+  const routes = pcData.routes || [];
+  grid.innerHTML = '';
+
+  // Week label
+  const ymd = pcData.routeWeekStartYmd;
+  if (!ymd) {
+    weekLabelEl.textContent = 'No route plans found for current week.';
+  } else {
+    const [y, m, d] = ymd.split('-').map(Number);
+    const monday = new Date(y, m - 1, d);
+    const sunday = new Date(y, m - 1, d + 6);
+    const fmt = (dt, withYear) =>
+      dt.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: withYear ? 'numeric' : undefined
+      });
+
+    weekLabelEl.textContent =
+      `Week of ${fmt(monday, false)} – ${fmt(sunday, true)}`;
+  }
+
+  if (!routes.length) {
+    grid.innerHTML = '<div class="empty-route-msg">No route plans found for current week.</div>';
+    return;
+  }
+
+  const userFilter = document.getElementById('user-filter').value;
+  const search = document.getElementById('search-input').value.toLowerCase();
+
+  // per-user map
+  const perUser = {};
+  routes.forEach(r => {
+    if (userFilter !== 'ALL' && r.userEmail !== userFilter) return;
+
+    const text = ((r.dayName || '') + ' ' + (r.station || '')).toLowerCase();
+    if (search && !text.includes(search)) return;
+
+    const email = r.userEmail || 'Unknown';
+    if (!perUser[email]) {
+      perUser[email] = {
+        email,
+        name: r.userName || email,
+        days: {}
+      };
+    }
+    const dayKey = r.dayName || '';
+    perUser[email].days[dayKey] = r;
+  });
+
+  const usersList = Object.values(perUser)
+    .sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
+
+  if (!usersList.length) {
+    grid.innerHTML = '<div class="empty-route-msg">No routes for selected filters.</div>';
+    return;
+  }
+
+  const weekdayOrder = [
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday'
+  ];
+
+  usersList.forEach(u => {
+    const card = document.createElement('div');
+    card.className = 'route-card';
+    card.innerHTML = `
+      <div class="route-card-header">
+        <div class="route-user-name">${escapeHtml(u.name)}</div>
+        <div class="route-user-email">${escapeHtml(u.email)}</div>
+      </div>
+      <div class="route-days-row"></div>
+    `;
+
+    const row = card.querySelector('.route-days-row');
+
+    weekdayOrder.forEach(day => {
+      const r = u.days[day] || null;
+      const stationText = r ? (r.station || '') : 'No Plan';
+      const typeClass = !r
+        ? 'route-pill-empty'
+        : (stationText.toLowerCase() === 'leave'
+          ? 'route-pill-leave'
+          : 'route-pill-normal');
+
+      const dateStr =
+        r && r.planDateMs
+          ? new Date(r.planDateMs).toLocaleDateString('en-IN', {
+              day: '2-digit',
+              month: 'short'
+            })
+          : '';
+
+      const div = document.createElement('div');
+      div.className = `route-day-pill ${typeClass}`;
+      div.innerHTML = `
+        <div class="route-day-name">${day.slice(0, 3)}</div>
+        <div class="route-station">${escapeHtml(stationText)}</div>
+        ${dateStr ? `<div class="route-date">${dateStr}</div>` : ''}
+      `;
+      row.appendChild(div);
+    });
+
+    grid.appendChild(card);
+  });
+}
+
 
 function renderFollowups() {
   const tbody = document.querySelector('#followups-table tbody');

@@ -1,23 +1,27 @@
 const API_BASE = 'https://script.google.com/macros/s/AKfycbzwLE2kdkFL8nJyLdP-TLCqXHkbbeaX8aqGNDfN5iZD3ypvpx9QTSLhS00mwtGMI5Ip5A/exec';
 
+const ACTIVITY_VIEW_MODES = {
+  ALL_ROWS: 'ALL_ROWS',
+  LATEST_PER_CLIENT: 'LATEST_PER_CLIENT'
+};
+
 let currentUser = null;
+let personEmailToNameKey = {};
 let pcData = {
   stats: null,
   followups: [],
   activities: [],
   perUserStats: {},
-  routes: [],             // 👈 NEW
-  routeWeekStartYmd: ''   // 👈 NEW
+  routes: [],
+  routeWeekStartYmd: ''
 };
 let countdownInterval = null;
 let currentTab = 'FOLLOWUPS';
 
-
-/******** GOOGLE SIGN-IN ********/
-
 function decodeJwtResponse(token) {
   const parts = token.split('.');
   if (parts.length !== 3) return null;
+
   const payload = parts[1]
     .replace(/-/g, '+')
     .replace(/_/g, '/');
@@ -30,10 +34,12 @@ window.handleGoogleCredential = (response) => {
     const payload = decodeJwtResponse(response.credential);
     const email = payload.email;
     const name = payload.name || '';
+
     if (!email) {
       showLoginError('Email not found in Google response.');
       return;
     }
+
     currentUser = { email, name };
     localStorage.setItem('pcUser', JSON.stringify(currentUser));
     initAppAfterLogin();
@@ -44,10 +50,8 @@ window.handleGoogleCredential = (response) => {
 
 function showLoginError(msg) {
   const el = document.getElementById('login-error');
-  el.textContent = msg;
+  if (el) el.textContent = msg;
 }
-
-/******** INIT ********/
 
 document.addEventListener('DOMContentLoaded', () => {
   const saved = localStorage.getItem('pcUser');
@@ -60,16 +64,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Tabs
   document.getElementById('tab-followups')
     .addEventListener('click', () => switchTab('FOLLOWUPS'));
   document.getElementById('tab-timelines')
     .addEventListener('click', () => switchTab('TIMELINES'));
-  document.getElementById('tab-routes')                      // 👈 NEW
-    .addEventListener('click', () => switchTab('ROUTES'));   // 👈 NEW
-  
+  document.getElementById('tab-routes')
+    .addEventListener('click', () => switchTab('ROUTES'));
 
-  // Filters
   document.getElementById('search-input')
     .addEventListener('input', renderCurrentTab);
   document.getElementById('user-filter')
@@ -78,22 +79,25 @@ document.addEventListener('DOMContentLoaded', () => {
     .addEventListener('change', renderFollowups);
   document.getElementById('outcome-filter')
     .addEventListener('change', renderTimelines);
+  document.getElementById('activity-view-mode')
+    .addEventListener('change', renderTimelines);
 
-  // Logout
   document.getElementById('btn-logout').addEventListener('click', () => {
     localStorage.removeItem('pcUser');
     currentUser = null;
     showScreen('login');
   });
 
-  // History modal close
   document.getElementById('btn-close-history')
     .addEventListener('click', closeHistoryModal);
+
+  switchTab(currentTab);
 });
 
 function showScreen(which) {
   const login = document.getElementById('login-screen');
   const main = document.getElementById('main-screen');
+
   if (which === 'login') {
     login.classList.add('active');
     main.classList.remove('active');
@@ -105,6 +109,7 @@ function showScreen(which) {
 
 async function initAppAfterLogin() {
   if (!currentUser) return;
+
   showScreen('main');
 
   document.getElementById('user-name').textContent = currentUser.name || '';
@@ -113,21 +118,20 @@ async function initAppAfterLogin() {
   await fetchBootstrap();
 }
 
-/******** API HELPERS ********/
-
 async function fetchBootstrap() {
   try {
     const url = `${API_BASE}?action=pcBootstrap&email=${encodeURIComponent(currentUser.email)}`;
     const res = await fetch(url);
     const data = await res.json();
+
     if (!data.ok) throw new Error(data.error || 'API error');
 
     pcData.stats = data.stats || null;
     pcData.followups = data.followups || [];
     pcData.activities = data.activities || [];
     pcData.perUserStats = (data.stats && data.stats.perUser) || {};
-    pcData.routes = data.routePlans || [];              // 👈 NEW
-    pcData.routeWeekStartYmd = data.routeWeekStartYmd || ''; // 👈 NEW
+    pcData.routes = data.routePlans || [];
+    pcData.routeWeekStartYmd = data.routeWeekStartYmd || '';
 
     updateStatsUI();
     updateUserFilterOptions();
@@ -138,19 +142,18 @@ async function fetchBootstrap() {
   }
 }
 
-/******** UI: STATS ********/
-
 function updateStatsUI() {
   if (!pcData.stats) return;
+
   const { followups, activities, perUser } = pcData.stats;
 
-  document.getElementById('stat-open').textContent = followups.open;
-  document.getElementById('stat-overdue').textContent = followups.overdue;
-  document.getElementById('stat-today').textContent = followups.today;
-  document.getElementById('stat-upcoming').textContent = followups.upcoming;
+  document.getElementById('stat-open').textContent = followups.open || 0;
+  document.getElementById('stat-overdue').textContent = followups.overdue || 0;
+  document.getElementById('stat-today').textContent = followups.today || 0;
+  document.getElementById('stat-upcoming').textContent = followups.upcoming || 0;
 
-  document.getElementById('stat-matured').textContent = activities.matured;
-  document.getElementById('stat-cancelled').textContent = activities.cancelled;
+  document.getElementById('stat-matured').textContent = activities.matured || 0;
+  document.getElementById('stat-cancelled').textContent = activities.cancelled || 0;
 
   const topContainer = document.getElementById('stat-top-users');
   topContainer.innerHTML = '';
@@ -163,14 +166,12 @@ function updateStatsUI() {
 
   list.sort((a, b) => (b.overdue || 0) - (a.overdue || 0));
 
-  list.slice(0, 5).forEach(u => {
+  list.slice(0, 5).forEach((u) => {
     const row = document.createElement('div');
     row.className = 'top-user-row';
     row.innerHTML = `
       <div class="top-user-name">${escapeHtml(u.name || u.email || '')}</div>
-      <div class="top-user-badge">
-        Overdue: ${u.overdue || 0} • Open: ${u.open || 0}
-      </div>
+      <div class="top-user-badge">Overdue: ${u.overdue || 0} | Open: ${u.open || 0}</div>
     `;
     topContainer.appendChild(row);
   });
@@ -178,71 +179,111 @@ function updateStatsUI() {
 
 function updateUserFilterOptions() {
   const select = document.getElementById('user-filter');
+  if (!select) return;
+
   const prevValue = select.value;
-  select.innerHTML = '<option value="ALL">All Marketing Persons</option>';
+  const map = {};
+  const nameToPrimaryEmailKey = {};
+  personEmailToNameKey = {};
 
-  const userMap = {};
+  const addPerson = (email, name, openIncrement) => {
+    const normEmail = normalizeText(email);
+    const normName = normalizeText(name);
 
-  // from follow-up stats
-  const perUser = pcData.stats ? pcData.stats.perUser || {} : {};
-  Object.values(perUser).forEach(u => {
-    userMap[u.email] = {
-      email: u.email,
-      name: u.name || u.email,
-      open: u.open || 0
-    };
-  });
+    let key = '';
+    if (normEmail) {
+      key = `EMAIL:${normEmail}`;
+      if (normName) {
+        nameToPrimaryEmailKey[normName] = key;
+        personEmailToNameKey[key] = `NAME:${normName}`;
+      }
+    } else if (normName) {
+      key = nameToPrimaryEmailKey[normName] || `NAME:${normName}`;
+    } else {
+      return;
+    }
 
-  // from RoutePlans (if someone has no open follow-ups)
-  (pcData.routes || []).forEach(r => {
-    if (!r.userEmail) return;
-    if (!userMap[r.userEmail]) {
-      userMap[r.userEmail] = {
-        email: r.userEmail,
-        name: r.userName || r.userEmail,
+    if (!map[key]) {
+      map[key] = {
+        key,
+        email: email || '',
+        name: name || '',
         open: 0
       };
     }
+
+    const target = map[key];
+    if (!target.email && email) target.email = email;
+    if ((!target.name || target.name === target.email) && name) target.name = name;
+    if (openIncrement) target.open += openIncrement;
+  };
+
+  (pcData.followups || []).forEach((f) => addPerson(f.userEmail, f.userName, 1));
+  (pcData.activities || []).forEach((a) => addPerson(a.userEmail, a.userName, 0));
+  (pcData.routes || []).forEach((r) => addPerson(r.userEmail, r.userName, 0));
+  Object.values(pcData.perUserStats || {}).forEach((u) => addPerson(u.email, u.name, 0));
+
+  const list = Object.values(map).sort((a, b) => {
+    const left = (a.name || a.email || '').toLowerCase();
+    const right = (b.name || b.email || '').toLowerCase();
+    return left.localeCompare(right);
   });
 
-  const list = Object.values(userMap);
+  select.innerHTML = '';
 
-  list.sort((a, b) =>
-    (a.name || a.email || '').localeCompare(b.name || b.email || '')
-  );
+  const allOption = document.createElement('option');
+  allOption.value = 'ALL';
+  allOption.textContent = 'All Marketing Persons';
+  allOption.dataset.personLabel = 'All Marketing Persons';
+  select.appendChild(allOption);
 
-  list.forEach(u => {
+  list.forEach((u) => {
     const opt = document.createElement('option');
-    opt.value = u.email;
-    const suffix = u.open ? ` (${u.open} open)` : '';
-    opt.textContent = `${u.name || u.email}${suffix}`;
+    opt.value = u.key;
+    const personLabel = formatPersonLabel(u.name, u.email);
+    const suffix = u.open ? ` - ${u.open} open` : '';
+    opt.textContent = `${personLabel}${suffix}`;
+    opt.dataset.personLabel = personLabel;
     select.appendChild(opt);
   });
 
-  if (prevValue && [...select.options].some(o => o.value === prevValue)) {
+  if (prevValue && [...select.options].some((o) => o.value === prevValue)) {
     select.value = prevValue;
+  } else {
+    select.value = 'ALL';
   }
 }
-
-
-/******** UI: TABS ********/
 
 function switchTab(tab) {
   currentTab = tab;
 
   document.getElementById('tab-followups').classList.toggle('active', tab === 'FOLLOWUPS');
   document.getElementById('tab-timelines').classList.toggle('active', tab === 'TIMELINES');
-  document.getElementById('tab-routes').classList.toggle('active', tab === 'ROUTES'); // 👈 NEW
+  document.getElementById('tab-routes').classList.toggle('active', tab === 'ROUTES');
 
   document.getElementById('followups-list').classList.toggle('active', tab === 'FOLLOWUPS');
   document.getElementById('timelines-list').classList.toggle('active', tab === 'TIMELINES');
-  document.getElementById('routes-list').classList.toggle('active', tab === 'ROUTES'); // 👈 NEW
+  document.getElementById('routes-list').classList.toggle('active', tab === 'ROUTES');
 
   document.getElementById('status-filter-container').classList.toggle('hidden', tab !== 'FOLLOWUPS');
   document.getElementById('outcome-filter-container').classList.toggle('hidden', tab !== 'TIMELINES');
-  // routes view ke liye dono extra filters hide rahenge
+  document.getElementById('activity-view-mode-container').classList.toggle('hidden', tab !== 'TIMELINES');
 
+  updateSearchPlaceholder(tab);
   renderCurrentTab();
+}
+
+function updateSearchPlaceholder(tab) {
+  const searchInput = document.getElementById('search-input');
+  if (!searchInput) return;
+
+  if (tab === 'ROUTES') {
+    searchInput.placeholder = 'Search by day / station / marketing person...';
+  } else if (tab === 'TIMELINES') {
+    searchInput.placeholder = 'Search by client / station / mobile / marketing person...';
+  } else {
+    searchInput.placeholder = 'Search by client / station / mobile / marketing person...';
+  }
 }
 
 function renderCurrentTab() {
@@ -251,11 +292,10 @@ function renderCurrentTab() {
   } else if (currentTab === 'TIMELINES') {
     renderTimelines();
   } else if (currentTab === 'ROUTES') {
-    renderRoutes();      // 👈 NEW
+    renderRoutes();
   }
 }
 
-/******** UI: FOLLOWUPS TABLE ********/
 function renderRoutes() {
   const grid = document.getElementById('routes-grid');
   const weekLabelEl = document.getElementById('routes-week-range');
@@ -264,7 +304,6 @@ function renderRoutes() {
   const routes = pcData.routes || [];
   grid.innerHTML = '';
 
-  // Week label
   const ymd = pcData.routeWeekStartYmd;
   if (!ymd) {
     weekLabelEl.textContent = 'No route plans found for current week.';
@@ -272,50 +311,64 @@ function renderRoutes() {
     const [y, m, d] = ymd.split('-').map(Number);
     const monday = new Date(y, m - 1, d);
     const sunday = new Date(y, m - 1, d + 6);
-    const fmt = (dt, withYear) =>
-      dt.toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: 'short',
-        year: withYear ? 'numeric' : undefined
-      });
 
-    weekLabelEl.textContent =
-      `Week of ${fmt(monday, false)} – ${fmt(sunday, true)}`;
+    const fmt = (dt, withYear) => dt.toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: withYear ? 'numeric' : undefined
+    });
+
+    weekLabelEl.textContent = `Week of ${fmt(monday, false)} - ${fmt(sunday, true)}`;
   }
 
-  if (!routes.length) {
-    grid.innerHTML = '<div class="empty-route-msg">No route plans found for current week.</div>';
-    return;
-  }
+  const selectedUser = getSelectedUserFilterValue();
+  const search = getSearchText();
 
-  const userFilter = document.getElementById('user-filter').value;
-  const search = document.getElementById('search-input').value.toLowerCase();
-
-  // per-user map
   const perUser = {};
-  routes.forEach(r => {
-    if (userFilter !== 'ALL' && r.userEmail !== userFilter) return;
+  let visiblePlans = 0;
 
-    const text = ((r.dayName || '') + ' ' + (r.station || '')).toLowerCase();
+  routes.forEach((r) => {
+    if (!matchesMarketingPersonFilter(r, selectedUser)) return;
+
+    const text = [r.dayName, r.station, r.userName, r.userEmail]
+      .join(' ')
+      .toLowerCase();
     if (search && !text.includes(search)) return;
 
-    const email = r.userEmail || 'Unknown';
-    if (!perUser[email]) {
-      perUser[email] = {
-        email,
-        name: r.userName || email,
+    visiblePlans++;
+
+    const emailKey = normalizeText(r.userEmail);
+    const nameKey = normalizeText(r.userName);
+    const key = emailKey ? `EMAIL:${emailKey}` : (nameKey ? `NAME:${nameKey}` : 'unknown');
+    if (!perUser[key]) {
+      perUser[key] = {
+        email: r.userEmail || '',
+        name: r.userName || r.userEmail || 'Unknown',
         days: {}
       };
     }
+
     const dayKey = r.dayName || '';
-    perUser[email].days[dayKey] = r;
+    const existing = perUser[key].days[dayKey];
+    const existingCreated = existing ? (existing.createdAtMs || 0) : 0;
+    const thisCreated = r.createdAtMs || 0;
+
+    if (!existing || thisCreated >= existingCreated) {
+      perUser[key].days[dayKey] = r;
+    }
   });
 
   const usersList = Object.values(perUser)
     .sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email));
 
+  renderSummaryChips('routes-summary', [
+    { label: 'Marketing Person', value: getSelectedMarketingPersonLabel(), className: 'person' },
+    { label: 'Visible Team Members', value: usersList.length, className: 'route' },
+    { label: 'Visible Route Plans', value: visiblePlans, className: 'route' }
+  ]);
+
   if (!usersList.length) {
-    grid.innerHTML = '<div class="empty-route-msg">No routes for selected filters.</div>';
+    grid.innerHTML = '<div class="empty-route-msg">No weekly routes match the selected filters.</div>';
     return;
   }
 
@@ -329,7 +382,7 @@ function renderRoutes() {
     'Sunday'
   ];
 
-  usersList.forEach(u => {
+  usersList.forEach((u) => {
     const card = document.createElement('div');
     card.className = 'route-card';
     card.innerHTML = `
@@ -342,22 +395,20 @@ function renderRoutes() {
 
     const row = card.querySelector('.route-days-row');
 
-    weekdayOrder.forEach(day => {
+    weekdayOrder.forEach((day) => {
       const r = u.days[day] || null;
       const stationText = r ? (r.station || '') : 'No Plan';
+
       const typeClass = !r
         ? 'route-pill-empty'
-        : (stationText.toLowerCase() === 'leave'
-          ? 'route-pill-leave'
-          : 'route-pill-normal');
+        : (stationText.toLowerCase() === 'leave' ? 'route-pill-leave' : 'route-pill-normal');
 
-      const dateStr =
-        r && r.planDateMs
-          ? new Date(r.planDateMs).toLocaleDateString('en-IN', {
-              day: '2-digit',
-              month: 'short'
-            })
-          : '';
+      const dateStr = r && r.planDateMs
+        ? new Date(r.planDateMs).toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short'
+          })
+        : '';
 
       const div = document.createElement('div');
       div.className = `route-day-pill ${typeClass}`;
@@ -373,40 +424,36 @@ function renderRoutes() {
   });
 }
 
-
 function renderFollowups() {
   const tbody = document.querySelector('#followups-table tbody');
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  const search = document.getElementById('search-input').value.toLowerCase();
-  const userFilter = document.getElementById('user-filter').value;
+  const search = getSearchText();
+  const userFilter = getSelectedUserFilterValue();
   const statusFilter = document.getElementById('status-filter').value;
   const nowMs = Date.now();
+  const todayYmd = formatYmdLocal(new Date());
 
   let list = pcData.followups || [];
 
-  list = list.filter(f => {
-    if (userFilter !== 'ALL' && f.userEmail !== userFilter) return false;
+  list = list.filter((f) => {
+    if (!matchesMarketingPersonFilter(f, userFilter)) return false;
 
-    const text = (
-      (f.clientName || '') + ' ' +
-      (f.station || '') + ' ' +
-      (f.mobile || '') + ' ' +
-      (f.userName || '')
-    ).toLowerCase();
+    const text = [f.clientName, f.station, f.mobile, f.userName, f.userEmail]
+      .join(' ')
+      .toLowerCase();
     if (search && !text.includes(search)) return false;
 
     if (statusFilter === 'OVERDUE' && !f.isOverdue) return false;
+
     if (statusFilter === 'TODAY') {
       if (!f.dueMs) return false;
-      const d = new Date(f.dueMs);
-      const today = new Date();
-      const dStr = d.toISOString().slice(0, 10);
-      const tStr = today.toISOString().slice(0, 10);
-      if (dStr !== tStr) return false;
+      const dueYmd = formatYmdLocal(new Date(f.dueMs));
+      if (dueYmd !== todayYmd) return false;
       if (f.dueMs < nowMs) return false;
     }
+
     if (statusFilter === 'UPCOMING') {
       if (!f.dueMs) return false;
       if (f.dueMs <= nowMs) return false;
@@ -415,7 +462,6 @@ function renderFollowups() {
     return true;
   });
 
-  // sort by due date
   list.sort((a, b) => {
     if (a.dueMs == null && b.dueMs == null) return 0;
     if (a.dueMs == null) return 1;
@@ -423,9 +469,19 @@ function renderFollowups() {
     return a.dueMs - b.dueMs;
   });
 
+  const visibleOverdue = list.filter((f) => f.isOverdue).length;
+  const visibleToday = list.filter((f) => f.dueMs && formatYmdLocal(new Date(f.dueMs)) === todayYmd).length;
+
+  renderSummaryChips('followups-summary', [
+    { label: 'Marketing Person', value: getSelectedMarketingPersonLabel(), className: 'person' },
+    { label: 'Visible Follow Ups', value: list.length },
+    { label: 'Overdue', value: visibleOverdue, className: 'overdue' },
+    { label: 'Due Today', value: visibleToday, className: 'today' }
+  ]);
+
   if (!list.length) {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td class="empty-row" colspan="10">No open follow-ups.</td>`;
+    tr.innerHTML = '<td class="empty-row" colspan="10">No follow-ups found for current filters.</td>';
     tbody.appendChild(tr);
     return;
   }
@@ -435,10 +491,8 @@ function renderFollowups() {
     tr.className = 'followup-row';
     if (f.isOverdue) tr.classList.add('overdue-row');
     tr.dataset.dueMs = f.dueMs || '';
-    tr.dataset.clientkey = f.clientKey || '';
 
-    const dueDateStr = f.dueMs ? new Date(f.dueMs).toLocaleString() : '';
-
+    const dueDateStr = f.dueMs ? new Date(f.dueMs).toLocaleString() : '-';
     const countdownLabel = formatDueLabel(f.dueMs);
 
     tr.innerHTML = `
@@ -448,89 +502,79 @@ function renderFollowups() {
         <span class="client-sub">${escapeHtml(f.station || '')}</span>
       </td>
       <td>${escapeHtml(f.mobile || '')}</td>
-      <td class="mkt-person-cell">${escapeHtml(f.userName || f.userEmail || '')}</td>
+      <td class="mkt-person-cell">${escapeHtml(formatPersonLabel(f.userName, f.userEmail))}</td>
       <td>${escapeHtml(f.nextActionType || '')}</td>
-      <td>${dueDateStr}</td>
-      <td class="countdown-cell"><span class="countdown-text">${countdownLabel}</span></td>
-      <td>Calls: ${f.callsBefore} / Visits: ${f.visitsBefore}</td>
+      <td>${escapeHtml(dueDateStr)}</td>
+      <td class="countdown-cell"><span class="countdown-text">${escapeHtml(countdownLabel)}</span></td>
+      <td>Calls: ${f.callsBefore || 0} / Visits: ${f.visitsBefore || 0}</td>
       <td class="remark-cell" title="${escapeHtml(f.remark || '')}">${escapeHtml(f.remark || '')}</td>
-      <td>
-        <a href="javascript:void(0)" class="badge-link history-link">View</a>
-      </td>
+      <td><a href="javascript:void(0)" class="badge-link history-link">View</a></td>
     `;
 
     tr.querySelector('.history-link').addEventListener('click', (ev) => {
       ev.stopPropagation();
-      openHistoryModal(f.clientKey, f.clientName, f.mobile);
+      openHistoryModal(getClientIdentity(f), f.clientName, f.mobile);
     });
 
     tbody.appendChild(tr);
   });
 }
 
-/******** UI: TIMELINES TABLE ********/
-
 function renderTimelines() {
   const tbody = document.querySelector('#timeline-table tbody');
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  const search = document.getElementById('search-input').value.toLowerCase();
-  const userFilter = document.getElementById('user-filter').value;
+  const search = getSearchText();
+  const userFilter = getSelectedUserFilterValue();
   const outcomeFilter = document.getElementById('outcome-filter').value;
+  const viewMode = document.getElementById('activity-view-mode').value || ACTIVITY_VIEW_MODES.ALL_ROWS;
 
-  let list = pcData.activities || [];
-
-  list = list.filter(a => {
-    if (userFilter !== 'ALL' && a.userEmail !== userFilter) return false;
+  let filtered = (pcData.activities || []).filter((a) => {
+    if (!matchesMarketingPersonFilter(a, userFilter)) return false;
     if (outcomeFilter !== 'ALL' && a.outcome !== outcomeFilter) return false;
 
-    const text = (
-      (a.clientName || '') + ' ' +
-      (a.station || '') + ' ' +
-      (a.mobile || '') + ' ' +
-      (a.userName || '')
-    ).toLowerCase();
-    if (search && !text.includes(search)) return false;
+    const text = [a.clientName, a.station, a.mobile, a.userName, a.userEmail, a.activityType, a.remark]
+      .join(' ')
+      .toLowerCase();
 
+    if (search && !text.includes(search)) return false;
     return true;
   });
 
-  if (!list.length) {
+  filtered = filtered.sort((a, b) => (b.tsMs || 0) - (a.tsMs || 0));
+
+  let visible = filtered;
+  if (viewMode === ACTIVITY_VIEW_MODES.LATEST_PER_CLIENT) {
+    visible = getLatestActivityPerClient(filtered);
+  }
+
+  const visibleMatured = visible.filter((a) => a.outcome === 'DEAL_MATURED').length;
+  const visibleCancelled = visible.filter((a) => a.outcome === 'DEAL_CANCELLED').length;
+
+  renderSummaryChips('deals-summary', [
+    { label: 'Marketing Person', value: getSelectedMarketingPersonLabel(), className: 'person' },
+    { label: 'View', value: viewMode === ACTIVITY_VIEW_MODES.ALL_ROWS ? 'All Activity Rows' : 'Latest Per Client' },
+    { label: 'Matching Activities', value: filtered.length },
+    { label: 'Visible Rows', value: visible.length },
+    { label: 'Visible Matured', value: visibleMatured, className: 'matured' },
+    { label: 'Visible Cancelled', value: visibleCancelled, className: 'cancelled' }
+  ]);
+
+  if (!visible.length) {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td class="empty-row" colspan="9">No activities found.</td>`;
+    tr.innerHTML = '<td class="empty-row" colspan="9">No activities found for current filters.</td>';
     tbody.appendChild(tr);
     return;
   }
 
-  // Group by clientKey, keep latest activity per client
-  const grouped = {};
-  list.forEach(a => {
-    const key = a.clientKey || (a.clientName + '|' + a.mobile);
-    if (!grouped[key] || (grouped[key].tsMs || 0) < (a.tsMs || 0)) {
-      grouped[key] = a;
-    }
-  });
-
-  const latestList = Object.values(grouped).sort((a, b) => (b.tsMs || 0) - (a.tsMs || 0));
-
-  latestList.forEach((a, idx) => {
+  visible.forEach((a, idx) => {
     const tr = document.createElement('tr');
 
-    const dateStr = a.tsMs ? new Date(a.tsMs).toLocaleString() : '';
+    const outcomeMeta = getOutcomeMeta(a.outcome);
+    if (outcomeMeta.rowClass) tr.classList.add(outcomeMeta.rowClass);
 
-    let outcomeLabel = 'Follow Up';
-    let outcomeClass = 'tag-followup';
-    if (a.outcome === 'DEAL_MATURED') {
-      outcomeLabel = 'Deal Matured';
-      outcomeClass = 'tag-matured';
-    } else if (a.outcome === 'DEAL_CANCELLED') {
-      outcomeLabel = 'Deal Cancelled';
-      outcomeClass = 'tag-cancelled';
-    } else if (a.outcome === 'FOLLOW_UP') {
-      outcomeLabel = 'Follow Up';
-      outcomeClass = 'tag-followup';
-    }
+    const dateStr = a.tsMs ? new Date(a.tsMs).toLocaleString() : '-';
 
     tr.innerHTML = `
       <td class="row-index">${idx + 1}</td>
@@ -539,60 +583,72 @@ function renderTimelines() {
         <span class="client-sub">${escapeHtml(a.station || '')}</span>
       </td>
       <td>${escapeHtml(a.mobile || '')}</td>
-      <td class="mkt-person-cell">${escapeHtml(a.userName || a.userEmail || '')}</td>
+      <td class="mkt-person-cell">${escapeHtml(formatPersonLabel(a.userName, a.userEmail))}</td>
       <td>${escapeHtml(a.activityType || '')}</td>
-      <td><span class="tag ${outcomeClass}">${escapeHtml(outcomeLabel)}</span></td>
-      <td>${dateStr}</td>
+      <td><span class="tag ${outcomeMeta.tagClass}">${escapeHtml(outcomeMeta.label)}</span></td>
+      <td>${escapeHtml(dateStr)}</td>
       <td class="remark-cell" title="${escapeHtml(a.remark || '')}">${escapeHtml(a.remark || '')}</td>
-      <td>
-        <a href="javascript:void(0)" class="badge-link history-link">View</a>
-      </td>
+      <td><a href="javascript:void(0)" class="badge-link history-link">View</a></td>
     `;
 
     tr.querySelector('.history-link').addEventListener('click', () => {
-      openHistoryModal(a.clientKey, a.clientName, a.mobile);
+      openHistoryModal(getClientIdentity(a), a.clientName, a.mobile);
     });
 
     tbody.appendChild(tr);
   });
 }
 
-/******** UI: HISTORY MODAL ********/
+function getLatestActivityPerClient(list) {
+  const grouped = {};
 
-function openHistoryModal(clientKey, clientName, mobile) {
+  list.forEach((a) => {
+    const key = getClientIdentity(a);
+    const existing = grouped[key];
+    if (!existing || (existing.tsMs || 0) < (a.tsMs || 0)) {
+      grouped[key] = a;
+    }
+  });
+
+  return Object.values(grouped).sort((a, b) => (b.tsMs || 0) - (a.tsMs || 0));
+}
+
+function openHistoryModal(clientIdentity, clientName, mobile) {
   const modal = document.getElementById('history-modal');
-  document.getElementById('history-title').textContent =
-    `History: ${clientName} (${mobile})`;
-
+  const title = document.getElementById('history-title');
   const container = document.getElementById('history-list');
+
+  title.textContent = `History: ${clientName || '-'} (${mobile || '-'})`;
   container.innerHTML = '';
 
   const list = (pcData.activities || [])
-    .filter(a => a.clientKey === clientKey)
+    .filter((a) => getClientIdentity(a) === clientIdentity)
     .sort((a, b) => (b.tsMs || 0) - (a.tsMs || 0));
 
-  list.forEach(a => {
+  if (!list.length) {
+    container.innerHTML = '<div class="history-item">No activity history found.</div>';
+  }
+
+  list.forEach((a) => {
     const item = document.createElement('div');
     item.className = 'history-item';
-    const dateStr = a.tsMs ? new Date(a.tsMs).toLocaleString() : '';
 
-    let tag = a.outcome;
-    if (a.outcome === 'FOLLOW_UP') tag = 'Follow Up';
-    if (a.outcome === 'DEAL_MATURED') tag = 'Deal Matured';
-    if (a.outcome === 'DEAL_CANCELLED') tag = 'Deal Cancelled';
+    const dateStr = a.tsMs ? new Date(a.tsMs).toLocaleString() : '-';
+    const outcomeMeta = getOutcomeMeta(a.outcome);
 
     item.innerHTML = `
       <div class="history-item-header">
         <div>
-          ${escapeHtml(a.activityType || '')} • ${dateStr}<br/>
+          ${escapeHtml(a.activityType || '')} | ${escapeHtml(dateStr)}<br/>
           <span style="font-size:0.75rem;color:#6b7280;">
-            ${escapeHtml(a.userName || a.userEmail || '')}
+            ${escapeHtml(formatPersonLabel(a.userName, a.userEmail))}
           </span>
         </div>
-        <div class="history-tag">${escapeHtml(tag || '')}</div>
+        <div class="history-tag">${escapeHtml(outcomeMeta.label)}</div>
       </div>
       ${a.remark ? `<div>Remark: ${escapeHtml(a.remark)}</div>` : ''}
     `;
+
     container.appendChild(item);
   });
 
@@ -603,27 +659,29 @@ function closeHistoryModal() {
   document.getElementById('history-modal').classList.add('hidden');
 }
 
-/******** COUNTDOWN TIMER ********/
-
 function startCountdownTimer() {
   if (countdownInterval) clearInterval(countdownInterval);
+
   countdownInterval = setInterval(() => {
     const rows = document.querySelectorAll('tr.followup-row');
     const now = Date.now();
-    rows.forEach(row => {
+
+    rows.forEach((row) => {
       const dueMs = Number(row.dataset.dueMs || '0');
       const cell = row.querySelector('.countdown-cell');
       const span = row.querySelector('.countdown-text');
+
       if (!dueMs || !cell || !span) return;
 
       const diff = dueMs - now;
       if (diff <= 0) {
         span.textContent = 'Overdue';
         cell.classList.add('overdue');
+        cell.classList.remove('soon');
       } else {
         span.textContent = formatDiff(diff);
         cell.classList.remove('overdue');
-        cell.classList.toggle('soon', diff <= 2 * 60 * 60 * 1000); // 2 hours
+        cell.classList.toggle('soon', diff <= 2 * 60 * 60 * 1000);
       }
     });
   }, 1000);
@@ -642,16 +700,132 @@ function formatDiff(diffMs) {
   const hours = Math.floor((totalSeconds % (24 * 3600)) / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  return `${days}d ${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+
+  return `${days}d ${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
-/******** UTILS ********/
+function renderSummaryChips(containerId, chips) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  chips.forEach((chip) => {
+    const span = document.createElement('span');
+    span.className = `summary-chip${chip.className ? ` ${chip.className}` : ''}`;
+    span.textContent = `${chip.label}: ${chip.value}`;
+    container.appendChild(span);
+  });
+}
+
+function getSearchText() {
+  const input = document.getElementById('search-input');
+  return (input && input.value ? input.value : '').trim().toLowerCase();
+}
+
+function getSelectedUserFilterValue() {
+  const select = document.getElementById('user-filter');
+  if (!select) return 'ALL';
+  return select.value || 'ALL';
+}
+
+function getSelectedMarketingPersonLabel() {
+  const select = document.getElementById('user-filter');
+  if (!select) return 'All Marketing Persons';
+
+  const selectedOption = select.options[select.selectedIndex];
+  if (!selectedOption) return 'All Marketing Persons';
+
+  return selectedOption.dataset.personLabel || selectedOption.textContent || 'All Marketing Persons';
+}
+
+function matchesMarketingPersonFilter(record, selectedValue) {
+  if (selectedValue === 'ALL') return true;
+
+  const emailKey = getEmailFilterKey(record.userEmail);
+  const nameKey = getNameFilterKey(record.userName);
+
+  if (selectedValue === emailKey || selectedValue === nameKey) return true;
+
+  if (selectedValue.startsWith('EMAIL:') && !emailKey && nameKey) {
+    return personEmailToNameKey[selectedValue] === nameKey;
+  }
+
+  return false;
+}
+
+function getEmailFilterKey(email) {
+  const normalized = normalizeText(email);
+  return normalized ? `EMAIL:${normalized}` : '';
+}
+
+function getNameFilterKey(name) {
+  const normalized = normalizeText(name);
+  return normalized ? `NAME:${normalized}` : '';
+}
+
+function formatPersonLabel(name, email) {
+  const cleanName = (name || '').trim();
+  const cleanEmail = (email || '').trim();
+
+  if (cleanName && cleanEmail && cleanName.toLowerCase() !== cleanEmail.toLowerCase()) {
+    return `${cleanName} (${cleanEmail})`;
+  }
+
+  return cleanName || cleanEmail || 'Unknown';
+}
+
+function normalizeText(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function formatYmdLocal(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function getClientIdentity(record) {
+  const key = (record.clientKey || '').trim();
+  if (key) return `KEY:${key}`;
+
+  const fallbackName = normalizeText(record.clientName);
+  const fallbackMobile = normalizeText(record.mobile);
+  return `FALLBACK:${fallbackName}|${fallbackMobile}`;
+}
+
+function getOutcomeMeta(outcome) {
+  if (outcome === 'DEAL_MATURED') {
+    return {
+      label: 'Deal Matured',
+      tagClass: 'tag-matured',
+      rowClass: 'timeline-row-matured'
+    };
+  }
+
+  if (outcome === 'DEAL_CANCELLED') {
+    return {
+      label: 'Deal Cancelled',
+      tagClass: 'tag-cancelled',
+      rowClass: 'timeline-row-cancelled'
+    };
+  }
+
+  return {
+    label: 'Follow Up',
+    tagClass: 'tag-followup',
+    rowClass: ''
+  };
+}
 
 function escapeHtml(str) {
   if (str === null || str === undefined) return '';
-  str = String(str);
-  return str
+
+  return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }

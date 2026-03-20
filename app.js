@@ -1,12 +1,15 @@
-const API_BASE = 'https://script.google.com/macros/s/AKfycbzwLE2kdkFL8nJyLdP-TLCqXHkbbeaX8aqGNDfN5iZD3ypvpx9QTSLhS00mwtGMI5Ip5A/exec';
+const API_BASE = 'https://script.google.com/macros/s/AKfycbx3gR0Fp1MF7U1N7K3CavypcsfNRMlQjJflVYuBvBvNGT12cAb9RSYbNajO8dcaTx_yqg/exec';
 
 const ACTIVITY_VIEW_MODES = {
   ALL_ROWS: 'ALL_ROWS',
   LATEST_PER_CLIENT: 'LATEST_PER_CLIENT'
 };
+const DEBUG_AUDIT = new URLSearchParams(window.location.search).get('debugAudit') === '1'
+  || localStorage.getItem('pcDebugAudit') === '1';
 
 let currentUser = null;
 let personEmailToNameKey = {};
+let lastBackendAuditSignature = '';
 let pcData = {
   stats: null,
   followups: [],
@@ -134,7 +137,7 @@ async function fetchBootstrap() {
 
     pcData.stats = data.stats || null;
     pcData.followups = data.followups || [];
-    pcData.activities = data.activities || [];
+    pcData.activities = (data.activities || []).map((a) => normalizeActivityRecord(a));
     pcData.perUserStats = (data.stats && data.stats.perUser) || {};
     pcData.routes = data.routePlans || [];
     pcData.routeWeekStartYmd = data.routeWeekStartYmd || '';
@@ -538,32 +541,35 @@ function renderTimelines() {
 
   const search = getSearchText();
   const userFilter = getSelectedUserFilterValue();
+  const selectedMarketingIdentity = getSelectedMarketingIdentity();
   const outcomeFilterEl = document.getElementById('outcome-filter');
-  const outcomeFilter = outcomeFilterEl ? outcomeFilterEl.value : 'ALL';
+  const outcomeFilter = outcomeFilterEl ? normalizeOutcome(outcomeFilterEl.value) : 'ALL';
   const viewModeEl = document.getElementById('activity-view-mode');
   const viewMode = viewModeEl ? (viewModeEl.value || ACTIVITY_VIEW_MODES.ALL_ROWS) : ACTIVITY_VIEW_MODES.ALL_ROWS;
 
-  let filtered = (pcData.activities || []).filter((a) => {
-    if (!matchesMarketingPersonFilter(a, userFilter)) return false;
-    if (outcomeFilter !== 'ALL' && a.outcome !== outcomeFilter) return false;
-
+  const rawList = (pcData.activities || []).map((a) => normalizeActivityRecord(a));
+  const afterUserFilter = rawList.filter((a) => matchesMarketingPersonFilter(a, userFilter));
+  const afterOutcomeFilter = afterUserFilter.filter((a) => {
+    if (outcomeFilter === 'ALL') return true;
+    return normalizeOutcome(a.outcome) === outcomeFilter;
+  });
+  const afterSearchFilter = afterOutcomeFilter.filter((a) => {
     const text = [a.clientName, a.station, a.mobile, a.userName, a.userEmail, a.activityType, a.remark]
       .join(' ')
       .toLowerCase();
-
     if (search && !text.includes(search)) return false;
     return true;
   });
 
-  filtered = filtered.sort((a, b) => (b.tsMs || 0) - (a.tsMs || 0));
+  const filtered = afterSearchFilter.sort((a, b) => (b.tsMs || 0) - (a.tsMs || 0));
 
   let visible = filtered;
   if (viewMode === ACTIVITY_VIEW_MODES.LATEST_PER_CLIENT) {
     visible = getLatestActivityPerClient(filtered);
   }
 
-  const visibleMatured = visible.filter((a) => a.outcome === 'DEAL_MATURED').length;
-  const visibleCancelled = visible.filter((a) => a.outcome === 'DEAL_CANCELLED').length;
+  const visibleMatured = visible.filter((a) => normalizeOutcome(a.outcome) === 'DEAL_MATURED').length;
+  const visibleCancelled = visible.filter((a) => normalizeOutcome(a.outcome) === 'DEAL_CANCELLED').length;
 
   renderSummaryChips('deals-summary', [
     { label: 'Marketing Person', value: getSelectedMarketingPersonLabel(), className: 'person' },
@@ -581,10 +587,39 @@ function renderTimelines() {
     return;
   }
 
+  if (DEBUG_AUDIT) {
+    const visibleIds = new Set(visible.map((a) => getActivityUniqueId(a)));
+    const excludedByViewMode = viewMode === ACTIVITY_VIEW_MODES.LATEST_PER_CLIENT
+      ? filtered.filter((a) => !visibleIds.has(getActivityUniqueId(a)))
+      : [];
+
+    logDealsAuditPipeline({
+      selectedMarketingIdentity,
+      outcomeFilter,
+      search,
+      viewMode,
+      rawList,
+      afterUserFilter,
+      afterOutcomeFilter,
+      afterSearchFilter,
+      visible,
+      excludedByUser: rawList.filter((a) => !matchesMarketingPersonFilter(a, userFilter)),
+      excludedByOutcome: afterUserFilter.filter((a) => outcomeFilter !== 'ALL' && normalizeOutcome(a.outcome) !== outcomeFilter),
+      excludedBySearch: afterOutcomeFilter.filter((a) => {
+        const text = [a.clientName, a.station, a.mobile, a.userName, a.userEmail, a.activityType, a.remark]
+          .join(' ')
+          .toLowerCase();
+        return search && !text.includes(search);
+      }),
+      excludedByViewMode
+    });
+    triggerBackendAudit(selectedMarketingIdentity, outcomeFilter);
+  }
+
   visible.forEach((a, idx) => {
     const tr = document.createElement('tr');
 
-    const outcomeMeta = getOutcomeMeta(a.outcome);
+    const outcomeMeta = getOutcomeMeta(normalizeOutcome(a.outcome));
     if (outcomeMeta.rowClass) tr.classList.add(outcomeMeta.rowClass);
 
     const dateStr = a.tsMs ? new Date(a.tsMs).toLocaleString() : '-';
@@ -648,7 +683,7 @@ function openHistoryModal(clientIdentity, clientName, mobile) {
     item.className = 'history-item';
 
     const dateStr = a.tsMs ? new Date(a.tsMs).toLocaleString() : '-';
-    const outcomeMeta = getOutcomeMeta(a.outcome);
+    const outcomeMeta = getOutcomeMeta(normalizeOutcome(a.outcome));
 
     item.innerHTML = `
       <div class="history-item-header">
@@ -811,8 +846,148 @@ function getClientIdentity(record) {
   return `FALLBACK:${fallbackName}|${fallbackMobile}`;
 }
 
+function getSelectedMarketingIdentity() {
+  const select = document.getElementById('user-filter');
+  if (!select) {
+    return { value: 'ALL', label: 'All Marketing Persons', email: '', name: '' };
+  }
+
+  const selectedOption = select.options[select.selectedIndex];
+  const value = select.value || 'ALL';
+  const label = selectedOption
+    ? (selectedOption.dataset.personLabel || selectedOption.textContent || 'All Marketing Persons')
+    : 'All Marketing Persons';
+
+  let email = '';
+  let name = '';
+
+  if (value.startsWith('EMAIL:')) email = value.slice('EMAIL:'.length);
+  if (value.startsWith('NAME:')) name = value.slice('NAME:'.length);
+  if (!name) name = extractNameFromPersonLabel(label);
+
+  return { value, label, email, name };
+}
+
+function extractNameFromPersonLabel(label) {
+  const clean = (label || '').trim();
+  const bracketIndex = clean.indexOf('(');
+  if (bracketIndex > 0) return clean.slice(0, bracketIndex).trim();
+  if (clean.toLowerCase() === 'all marketing persons') return '';
+  return clean;
+}
+
+function normalizeOutcome(value) {
+  const raw = String(value || '').trim().toUpperCase().replace(/[\s-]+/g, '_');
+  if (!raw) return '';
+  if (raw === 'DEAL_MATURED' || raw === 'MATURED' || raw === 'DEALMATURED' || raw === 'MD') return 'DEAL_MATURED';
+  if (raw === 'DEAL_CANCELLED' || raw === 'DEAL_CANCELED' || raw === 'CANCELLED' || raw === 'CANCELED') return 'DEAL_CANCELLED';
+  if (raw === 'FOLLOW_UP' || raw === 'FOLLOWUP' || raw === 'FU') return 'FOLLOW_UP';
+  return raw;
+}
+
+function normalizeActivityRecord(activity) {
+  const normalizedOutcome = normalizeOutcome(activity.outcome || activity.rawOutcome);
+  return {
+    ...activity,
+    rawOutcome: activity.rawOutcome || activity.outcome || '',
+    outcome: normalizedOutcome
+  };
+}
+
+function getActivityUniqueId(activity) {
+  if (activity.id) return String(activity.id);
+  return `${getClientIdentity(activity)}|${activity.tsMs || 0}|${normalizeOutcome(activity.outcome)}`;
+}
+
+function pickAuditRows(list) {
+  return list.map((a) => ({
+    id: getActivityUniqueId(a),
+    userEmail: a.userEmail || '',
+    userName: a.userName || '',
+    clientKey: a.clientKey || '',
+    clientName: a.clientName || '',
+    mobile: a.mobile || '',
+    outcome: normalizeOutcome(a.outcome),
+    ts: a.tsMs ? new Date(a.tsMs).toISOString() : ''
+  }));
+}
+
+function logDealsAuditPipeline(payload) {
+  const targetOutcome = payload.outcomeFilter === 'ALL'
+    ? 'ALL'
+    : normalizeOutcome(payload.outcomeFilter);
+
+  const selectedLabel = payload.selectedMarketingIdentity.label || 'All Marketing Persons';
+  const header = `[PC AUDIT] Person=${selectedLabel} | Outcome=${targetOutcome} | View=${payload.viewMode}`;
+
+  console.groupCollapsed(header);
+  console.log('Frontend raw activities received from API:', payload.rawList.length);
+  console.log('After Marketing Person filter:', payload.afterUserFilter.length);
+  console.log('After Outcome filter:', payload.afterOutcomeFilter.length);
+  console.log('After Search filter:', payload.afterSearchFilter.length);
+  console.log('Final rendered rows:', payload.visible.length);
+
+  console.log('Excluded by Marketing Person filter IDs:', payload.excludedByUser.map(getActivityUniqueId));
+  console.log('Excluded by Outcome filter IDs:', payload.excludedByOutcome.map(getActivityUniqueId));
+  console.log('Excluded by Search filter IDs:', payload.excludedBySearch.map(getActivityUniqueId));
+  console.log('Excluded by View Mode IDs:', payload.excludedByViewMode.map(getActivityUniqueId));
+
+  if (payload.excludedByUser.length) console.table(pickAuditRows(payload.excludedByUser));
+  if (payload.excludedByOutcome.length) console.table(pickAuditRows(payload.excludedByOutcome));
+  if (payload.excludedBySearch.length) console.table(pickAuditRows(payload.excludedBySearch));
+  if (payload.excludedByViewMode.length) console.table(pickAuditRows(payload.excludedByViewMode));
+
+  console.groupEnd();
+}
+
+async function triggerBackendAudit(selectedMarketingIdentity, outcomeFilter) {
+  if (!DEBUG_AUDIT) return;
+  if (!currentUser || !selectedMarketingIdentity || selectedMarketingIdentity.value === 'ALL') return;
+
+  const normalizedOutcome = normalizeOutcome(outcomeFilter);
+  if (!normalizedOutcome || normalizedOutcome === 'ALL') return;
+
+  const signature = `${selectedMarketingIdentity.email}|${selectedMarketingIdentity.name}|${normalizedOutcome}`;
+  if (signature === lastBackendAuditSignature) return;
+  lastBackendAuditSignature = signature;
+
+  const url = `${API_BASE}?action=pcAudit`
+    + `&email=${encodeURIComponent(currentUser.email)}`
+    + `&marketingEmail=${encodeURIComponent(selectedMarketingIdentity.email || '')}`
+    + `&marketingName=${encodeURIComponent(selectedMarketingIdentity.name || '')}`
+    + `&outcome=${encodeURIComponent(normalizedOutcome)}`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.ok) {
+      console.error('[PC AUDIT][Backend] Error:', data.error || data);
+      return;
+    }
+
+    const audit = data.audit || {};
+    console.groupCollapsed('[PC AUDIT][Backend] Sheet/API comparison');
+    console.log('1) Raw sheet matched rows:', audit.sheetRawMatchedCount);
+    console.log('2) API matched rows (current):', audit.apiMatchedCount);
+    console.log('Legacy 500-row-window matched rows:', audit.legacy500MatchedCount);
+    console.log('Excluded by legacy 500-row-window:', audit.excludedByLegacyLimitCount);
+    console.log('Excluded row IDs and reasons:', (audit.excludedByLegacyLimitRows || []).map((r) => ({
+      id: r.id,
+      reason: r.reason
+    })));
+    if (audit.excludedByLegacyLimitRows && audit.excludedByLegacyLimitRows.length) {
+      console.table(audit.excludedByLegacyLimitRows);
+    }
+    console.groupEnd();
+  } catch (err) {
+    console.error('[PC AUDIT][Backend] Request failed:', err);
+  }
+}
+
 function getOutcomeMeta(outcome) {
-  if (outcome === 'DEAL_MATURED') {
+  const normalized = normalizeOutcome(outcome);
+
+  if (normalized === 'DEAL_MATURED') {
     return {
       label: 'Deal Matured',
       tagClass: 'tag-matured',
@@ -820,7 +995,7 @@ function getOutcomeMeta(outcome) {
     };
   }
 
-  if (outcome === 'DEAL_CANCELLED') {
+  if (normalized === 'DEAL_CANCELLED') {
     return {
       label: 'Deal Cancelled',
       tagClass: 'tag-cancelled',

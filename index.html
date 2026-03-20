@@ -2,16 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Process Coordinator – Follow-up Monitor</title>
+  <title>Process Coordinator - Follow-up Monitor</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Google Identity Services -->
+  <link rel="icon" href="data:," />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div id="app">
 
-    <!-- LOGIN SCREEN -->
     <div id="login-screen" class="screen active">
       <div class="login-card">
         <h1>NBD Sales Coordinator</h1>
@@ -38,7 +37,6 @@
       </div>
     </div>
 
-    <!-- MAIN SCREEN -->
     <div id="main-screen" class="screen">
       <header class="top-bar">
         <div>
@@ -51,7 +49,6 @@
         <button id="btn-logout" class="btn-outline">Logout</button>
       </header>
 
-      <!-- STATS SECTION -->
       <section class="stats-section">
         <div class="stats-card">
           <h3>Follow-up Snapshot</h3>
@@ -72,22 +69,20 @@
         </div>
 
         <div class="stats-card stats-wide">
-          <h3>Top Overdue – Marketing Persons</h3>
+          <h3>Top Overdue - Marketing Persons</h3>
           <div id="stat-top-users" class="top-users-list"></div>
         </div>
       </section>
 
-      <!-- TABS -->
-    <section class="tabs">
-      <button id="tab-followups" class="tab active">Open Follow-ups</button>
-      <button id="tab-timelines" class="tab">Client Timelines</button>
-      <button id="tab-routes" class="tab">Weekly Routes</button> <!-- 👈 NEW -->
-    </section>
+      <section class="tabs">
+        <button id="tab-followups" class="tab active">Follow Ups</button>
+        <button id="tab-timelines" class="tab">Deals Activity</button>
+        <button id="tab-routes" class="tab">Weekly Route Plans</button>
+      </section>
 
-
-      <!-- FILTERS -->
       <section class="filters">
         <div class="filter-group">
+          <label for="search-input" class="filter-label">Search</label>
           <input
             type="text"
             id="search-input"
@@ -96,12 +91,14 @@
         </div>
 
         <div class="filter-group">
+          <label for="user-filter" class="filter-label">Marketing Person</label>
           <select id="user-filter">
             <option value="ALL">All Marketing Persons</option>
           </select>
         </div>
 
         <div class="filter-group" id="status-filter-container">
+          <label for="status-filter" class="filter-label">Follow-up Status</label>
           <select id="status-filter">
             <option value="ALL">All Status</option>
             <option value="OVERDUE">Overdue</option>
@@ -111,6 +108,7 @@
         </div>
 
         <div class="filter-group hidden" id="outcome-filter-container">
+          <label for="outcome-filter" class="filter-label">Outcome Type</label>
           <select id="outcome-filter">
             <option value="ALL">All Outcomes</option>
             <option value="FOLLOW_UP">Follow Up</option>
@@ -118,12 +116,26 @@
             <option value="DEAL_CANCELLED">Deal Cancelled</option>
           </select>
         </div>
+
+        <div class="filter-group hidden" id="activity-view-mode-container">
+          <label for="activity-view-mode" class="filter-label">View Mode</label>
+          <select id="activity-view-mode">
+            <option value="ALL_ROWS">All Activity Rows</option>
+            <option value="LATEST_PER_CLIENT">Latest Per Client</option>
+          </select>
+        </div>
       </section>
 
-      <!-- CONTENT -->
       <main class="content">
-        <!-- FOLLOWUPS TABLE -->
         <div id="followups-list" class="list active">
+          <div class="list-heading">
+            <div>
+              <h3 class="list-title">Open Follow Ups</h3>
+              <p class="list-subtitle">Pending client follow-ups across all marketing persons.</p>
+            </div>
+            <div id="followups-summary" class="summary-chips"></div>
+          </div>
+
           <div class="table-wrapper">
             <table class="data-table" id="followups-table">
               <thead>
@@ -145,8 +157,15 @@
           </div>
         </div>
 
-        <!-- TIMELINES TABLE -->
         <div id="timelines-list" class="list">
+          <div class="list-heading">
+            <div>
+              <h3 class="list-title">Deals Activity</h3>
+              <p class="list-subtitle">Activity log for follow ups, matured deals, and cancelled deals.</p>
+            </div>
+            <div id="deals-summary" class="summary-chips"></div>
+          </div>
+
           <div class="table-wrapper">
             <table class="data-table" id="timeline-table">
               <thead>
@@ -155,9 +174,9 @@
                   <th>Client / Station</th>
                   <th>Mobile</th>
                   <th>Marketing Person</th>
-                  <th>Last Activity</th>
+                  <th>Activity Type</th>
                   <th>Outcome</th>
-                  <th>Last Activity Time</th>
+                  <th>Activity Time</th>
                   <th>Remark</th>
                   <th>History</th>
                 </tr>
@@ -167,32 +186,29 @@
           </div>
         </div>
 
-      <!-- ROUTES VIEW -->
-      <div id="routes-list" class="list">
-        <div class="routes-header">
-          <div>
-            <h3 class="routes-title">Weekly Route – Current Week</h3>
-            <p id="routes-week-range" class="routes-subtitle">
-              Loading current week...
-            </p>
+        <div id="routes-list" class="list">
+          <div class="routes-header">
+            <div>
+              <h3 class="routes-title">Weekly Route Plan - Current Week</h3>
+              <p id="routes-week-range" class="routes-subtitle">Loading current week...</p>
+            </div>
+            <div class="routes-right">
+              <div id="routes-summary" class="summary-chips"></div>
+              <div class="routes-legend">
+                <span class="legend-pill legend-normal">Route</span>
+                <span class="legend-pill legend-leave">Leave</span>
+                <span class="legend-pill legend-empty">No Plan</span>
+              </div>
+            </div>
           </div>
-          <div class="routes-legend">
-            <span class="legend-pill legend-normal">Route</span>
-            <span class="legend-pill legend-leave">Leave</span>
-            <span class="legend-pill legend-empty">No Plan</span>
+
+          <div class="routes-wrapper">
+            <div id="routes-grid" class="routes-grid"></div>
           </div>
         </div>
-      
-        <div class="routes-wrapper">
-          <div id="routes-grid" class="routes-grid">
-            <!-- JS se cards inject honge -->
-          </div>
-        </div>
-      </div>       
       </main>
     </div>
 
-    <!-- HISTORY MODAL -->
     <div id="history-modal" class="modal hidden">
       <div class="modal-backdrop"></div>
       <div class="modal-content history-modal-content">

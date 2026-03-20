@@ -53,6 +53,18 @@ function showLoginError(msg) {
   if (el) el.textContent = msg;
 }
 
+function bindIfExists(id, eventName, handler) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener(eventName, handler);
+}
+
+function toggleClassById(id, className, enabled) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle(className, enabled);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const saved = localStorage.getItem('pcUser');
   if (saved) {
@@ -64,32 +76,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  document.getElementById('tab-followups')
-    .addEventListener('click', () => switchTab('FOLLOWUPS'));
-  document.getElementById('tab-timelines')
-    .addEventListener('click', () => switchTab('TIMELINES'));
-  document.getElementById('tab-routes')
-    .addEventListener('click', () => switchTab('ROUTES'));
+  bindIfExists('tab-followups', 'click', () => switchTab('FOLLOWUPS'));
+  bindIfExists('tab-timelines', 'click', () => switchTab('TIMELINES'));
+  bindIfExists('tab-routes', 'click', () => switchTab('ROUTES'));
 
-  document.getElementById('search-input')
-    .addEventListener('input', renderCurrentTab);
-  document.getElementById('user-filter')
-    .addEventListener('change', renderCurrentTab);
-  document.getElementById('status-filter')
-    .addEventListener('change', renderFollowups);
-  document.getElementById('outcome-filter')
-    .addEventListener('change', renderTimelines);
-  document.getElementById('activity-view-mode')
-    .addEventListener('change', renderTimelines);
+  bindIfExists('search-input', 'input', renderCurrentTab);
+  bindIfExists('user-filter', 'change', renderCurrentTab);
+  bindIfExists('status-filter', 'change', renderFollowups);
+  bindIfExists('outcome-filter', 'change', renderTimelines);
+  bindIfExists('activity-view-mode', 'change', renderTimelines);
 
-  document.getElementById('btn-logout').addEventListener('click', () => {
+  bindIfExists('btn-logout', 'click', () => {
     localStorage.removeItem('pcUser');
     currentUser = null;
     showScreen('login');
   });
 
-  document.getElementById('btn-close-history')
-    .addEventListener('click', closeHistoryModal);
+  bindIfExists('btn-close-history', 'click', closeHistoryModal);
 
   switchTab(currentTab);
 });
@@ -97,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function showScreen(which) {
   const login = document.getElementById('login-screen');
   const main = document.getElementById('main-screen');
+  if (!login || !main) return;
 
   if (which === 'login') {
     login.classList.add('active');
@@ -112,8 +116,10 @@ async function initAppAfterLogin() {
 
   showScreen('main');
 
-  document.getElementById('user-name').textContent = currentUser.name || '';
-  document.getElementById('user-email').textContent = currentUser.email || '';
+  const nameEl = document.getElementById('user-name');
+  const emailEl = document.getElementById('user-email');
+  if (nameEl) nameEl.textContent = currentUser.name || '';
+  if (emailEl) emailEl.textContent = currentUser.email || '';
 
   await fetchBootstrap();
 }
@@ -146,16 +152,20 @@ function updateStatsUI() {
   if (!pcData.stats) return;
 
   const { followups, activities, perUser } = pcData.stats;
+  const setText = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
 
-  document.getElementById('stat-open').textContent = followups.open || 0;
-  document.getElementById('stat-overdue').textContent = followups.overdue || 0;
-  document.getElementById('stat-today').textContent = followups.today || 0;
-  document.getElementById('stat-upcoming').textContent = followups.upcoming || 0;
-
-  document.getElementById('stat-matured').textContent = activities.matured || 0;
-  document.getElementById('stat-cancelled').textContent = activities.cancelled || 0;
+  setText('stat-open', followups.open || 0);
+  setText('stat-overdue', followups.overdue || 0);
+  setText('stat-today', followups.today || 0);
+  setText('stat-upcoming', followups.upcoming || 0);
+  setText('stat-matured', activities.matured || 0);
+  setText('stat-cancelled', activities.cancelled || 0);
 
   const topContainer = document.getElementById('stat-top-users');
+  if (!topContainer) return;
   topContainer.innerHTML = '';
 
   const list = Object.values(perUser || {});
@@ -257,17 +267,17 @@ function updateUserFilterOptions() {
 function switchTab(tab) {
   currentTab = tab;
 
-  document.getElementById('tab-followups').classList.toggle('active', tab === 'FOLLOWUPS');
-  document.getElementById('tab-timelines').classList.toggle('active', tab === 'TIMELINES');
-  document.getElementById('tab-routes').classList.toggle('active', tab === 'ROUTES');
+  toggleClassById('tab-followups', 'active', tab === 'FOLLOWUPS');
+  toggleClassById('tab-timelines', 'active', tab === 'TIMELINES');
+  toggleClassById('tab-routes', 'active', tab === 'ROUTES');
 
-  document.getElementById('followups-list').classList.toggle('active', tab === 'FOLLOWUPS');
-  document.getElementById('timelines-list').classList.toggle('active', tab === 'TIMELINES');
-  document.getElementById('routes-list').classList.toggle('active', tab === 'ROUTES');
+  toggleClassById('followups-list', 'active', tab === 'FOLLOWUPS');
+  toggleClassById('timelines-list', 'active', tab === 'TIMELINES');
+  toggleClassById('routes-list', 'active', tab === 'ROUTES');
 
-  document.getElementById('status-filter-container').classList.toggle('hidden', tab !== 'FOLLOWUPS');
-  document.getElementById('outcome-filter-container').classList.toggle('hidden', tab !== 'TIMELINES');
-  document.getElementById('activity-view-mode-container').classList.toggle('hidden', tab !== 'TIMELINES');
+  toggleClassById('status-filter-container', 'hidden', tab !== 'FOLLOWUPS');
+  toggleClassById('outcome-filter-container', 'hidden', tab !== 'TIMELINES');
+  toggleClassById('activity-view-mode-container', 'hidden', tab !== 'TIMELINES');
 
   updateSearchPlaceholder(tab);
   renderCurrentTab();
@@ -431,7 +441,8 @@ function renderFollowups() {
 
   const search = getSearchText();
   const userFilter = getSelectedUserFilterValue();
-  const statusFilter = document.getElementById('status-filter').value;
+  const statusFilterEl = document.getElementById('status-filter');
+  const statusFilter = statusFilterEl ? statusFilterEl.value : 'ALL';
   const nowMs = Date.now();
   const todayYmd = formatYmdLocal(new Date());
 
@@ -527,8 +538,10 @@ function renderTimelines() {
 
   const search = getSearchText();
   const userFilter = getSelectedUserFilterValue();
-  const outcomeFilter = document.getElementById('outcome-filter').value;
-  const viewMode = document.getElementById('activity-view-mode').value || ACTIVITY_VIEW_MODES.ALL_ROWS;
+  const outcomeFilterEl = document.getElementById('outcome-filter');
+  const outcomeFilter = outcomeFilterEl ? outcomeFilterEl.value : 'ALL';
+  const viewModeEl = document.getElementById('activity-view-mode');
+  const viewMode = viewModeEl ? (viewModeEl.value || ACTIVITY_VIEW_MODES.ALL_ROWS) : ACTIVITY_VIEW_MODES.ALL_ROWS;
 
   let filtered = (pcData.activities || []).filter((a) => {
     if (!matchesMarketingPersonFilter(a, userFilter)) return false;
@@ -617,6 +630,7 @@ function openHistoryModal(clientIdentity, clientName, mobile) {
   const modal = document.getElementById('history-modal');
   const title = document.getElementById('history-title');
   const container = document.getElementById('history-list');
+  if (!modal || !title || !container) return;
 
   title.textContent = `History: ${clientName || '-'} (${mobile || '-'})`;
   container.innerHTML = '';
@@ -656,7 +670,9 @@ function openHistoryModal(clientIdentity, clientName, mobile) {
 }
 
 function closeHistoryModal() {
-  document.getElementById('history-modal').classList.add('hidden');
+  const modal = document.getElementById('history-modal');
+  if (!modal) return;
+  modal.classList.add('hidden');
 }
 
 function startCountdownTimer() {
